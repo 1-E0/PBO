@@ -8,7 +8,5 @@ public class MultiShot implements Skill {
     public void activate(Hero self, Hero target) {
         System.out.println(self.getName() + " uses Multi Shot!");
         target.takeDamage(20);
-        // Could affect multiple enemies later
     }
 }
-

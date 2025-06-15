@@ -7,7 +7,6 @@ public class ShieldWall implements Skill {
     @Override
     public void activate(Hero self, Hero target) {
         System.out.println(self.getName() + " activates Shield Wall! Gains 20 HP.");
-        self.takeDamage(-20);
+        self.takeDamage(-20); // Using negative damage to heal
     }
 }
-
