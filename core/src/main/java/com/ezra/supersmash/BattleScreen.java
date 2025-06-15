@@ -67,7 +67,7 @@ public class BattleScreen implements Screen {
         float yBottom = screenHeight * 0.25f;
         float[] yPositions = {yTop, yMiddle, yBottom};
 
-        // Adjusted X positions to bring heroes even closer to the center
+        // Adjusted X positions to bring heroes closer to the center
         float xP1_Back = screenWidth * 0.30f;
         float xP1_Front = screenWidth * 0.35f;
         float xP2_Back = screenWidth * 0.70f;
@@ -85,9 +85,9 @@ public class BattleScreen implements Screen {
         Drawable statusBoxBg = skin.newDrawable("white", new Color(0, 0, 0, 0.6f));
         float statusBoxWidth = 160f;
 
-        // Horizontal offsets for status UI based on side, kept as before as user did not specify change here
-        float horizontalOffsetP1Status = 80f;
-        float horizontalOffsetP2Status = 110f;
+        // Increased horizontal offsets significantly to make status UI even more obscured ("lebih ke belakang lagi")
+        float horizontalOffsetP1Status = 120f;
+        float horizontalOffsetP2Status = 150f;
 
         for (int i = 0; i < 3; i++) {
             float charHeight = baseCharHeight * scales[i];
@@ -139,8 +139,10 @@ public class BattleScreen implements Screen {
 
         // --- Top and Bottom UI Panels ---
         Table topUiPanel = new Table();
-        turnLabel = new Label("", skin);
-        logLabel = new Label("", skin);
+        topUiPanel.setBackground(skin.newDrawable("white", new Color(0, 0, 0, 0.5f))); // Added background for highlight
+        turnLabel = new Label("", skin, "highlighted"); // Uses the new 'highlighted' style
+        turnLabel.setFontScale(1.2f); // Increased font scale for emphasis
+        logLabel = new Label("", skin, "highlighted"); // Uses the new 'highlighted' style
         logLabel.setWrap(true);
         logLabel.setAlignment(Align.center);
         topUiPanel.add(turnLabel).pad(10).row();
