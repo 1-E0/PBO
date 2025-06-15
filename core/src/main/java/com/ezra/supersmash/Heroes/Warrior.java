@@ -2,6 +2,7 @@ package com.ezra.supersmash.Heroes;
 
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.ezra.supersmash.Element;
 import com.ezra.supersmash.Hero;
 import com.ezra.supersmash.Rendering.AnimationComponent;
 import com.ezra.supersmash.Skills.HammerSwing;
@@ -11,7 +12,7 @@ import java.util.Map;
 
 public class Warrior extends Hero {
     public Warrior() {
-        super("Warrior", 120, new HammerSwing(), createWarriorAnimations());
+        super("Warrior", 120, new HammerSwing(), createWarriorAnimations(), Element.NEUTRAL);
     }
 
     private static AnimationComponent createWarriorAnimations() {

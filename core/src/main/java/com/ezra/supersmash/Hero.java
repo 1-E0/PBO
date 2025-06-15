@@ -13,22 +13,42 @@ public abstract class Hero {
     protected int maxHp;
     protected int currentHp;
     protected Skill skill;
-    public AnimationComponent animationComponent; // Use the animation component
+    public AnimationComponent animationComponent;
+    protected Element element;
+    private Element appliedElement = Element.NEUTRAL;
+
+    // --- ENERGI SEKARANG MILIK HERO ---
+    protected int energy = 0;
+    protected int maxEnergy = 3;
 
     private List<StatusEffect> activeEffects = new ArrayList<>();
 
-    public Hero(String name, int hp, Skill skill, AnimationComponent animationComponent) {
+    public Hero(String name, int hp, Skill skill, AnimationComponent animationComponent, Element element) {
         this.name = name;
         this.maxHp = hp;
         this.currentHp = hp;
         this.skill = skill;
         this.animationComponent = animationComponent;
+        this.element = element;
     }
 
     public abstract void basicAttack(Hero target);
 
     public void useSkill(Hero target) {
         skill.activate(this, target);
+    }
+
+    // --- METODE UNTUK MENGELOLA ENERGI HERO ---
+    public int getEnergy() { return energy; }
+    public void gainEnergy(int amount) {
+        this.energy = Math.min(this.energy + amount, this.maxEnergy);
+    }
+    public boolean spendEnergy(int amount) {
+        if (this.energy >= amount) {
+            this.energy -= amount;
+            return true;
+        }
+        return false;
     }
 
     public void takeDamage(int damage) {
@@ -80,19 +100,28 @@ public abstract class Hero {
         }
     }
 
+    public Element getElement() {
+        return element;
+    }
+
+    public Element getAppliedElement() {
+        return appliedElement;
+    }
+
+    public void setAppliedElement(Element appliedElement) {
+        this.appliedElement = appliedElement;
+        System.out.println(this.name + " is now affected by " + appliedElement.name() + " element!");
+    }
+
+    // --- getStatus() DIPERBARUI UNTUK MENAMPILKAN ENERGI ---
     public String getStatus() {
         StringBuilder status = new StringBuilder();
-        status.append(name).append(" HP: ").append(currentHp).append("/").append(maxHp);
+        status.append(name).append("\n");
+        status.append("HP: ").append(currentHp).append("/").append(maxHp).append("\n");
+        status.append("Energy: ").append(energy).append("/").append(maxEnergy);
 
-        if (!activeEffects.isEmpty()) {
-            status.append("\nEffects: ");
-            for (int i = 0; i < activeEffects.size(); i++) {
-                StatusEffect effect = activeEffects.get(i);
-                status.append(effect.getName()).append(" (").append(effect.getDuration()).append("t)");
-                if (i < activeEffects.size() - 1) {
-                    status.append(", ");
-                }
-            }
+        if (appliedElement != Element.NEUTRAL) {
+            status.append("\n[").append(appliedElement.name()).append("]");
         }
         return status.toString();
     }

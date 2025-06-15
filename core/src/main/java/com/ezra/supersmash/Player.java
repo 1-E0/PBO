@@ -1,41 +1,58 @@
 package com.ezra.supersmash;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Player {
+    private List<Hero> heroRoster;
     private Hero activeHero;
+    private String name;
 
-    // TEMPORARY: Constructor takes only one hero
-    public Player(Hero hero) {
-        this.activeHero = hero;
+    public Player(String name, List<Hero> heroes) {
+        if (heroes == null || heroes.isEmpty()) {
+            throw new IllegalArgumentException("Player must have at least one hero.");
+        }
+        this.name = name;
+        this.heroRoster = new ArrayList<>(heroes);
+        // Awalnya tidak ada hero aktif, pemain harus memilih
+        this.activeHero = null;
     }
 
     public Hero getActiveHero() {
         return activeHero;
     }
 
-    // setActiveHero is no longer needed for a 1v1 test
-
-    // getHeroRoster now returns a list containing only the active hero
-    public List<Hero> getHeroRoster() {
-        return Collections.singletonList(activeHero);
+    public String getName() {
+        return name;
     }
 
-    // hasLost checks if the single hero is no longer alive
-    public boolean hasLost() {
-        return !activeHero.isAlive();
-    }
-
-    // --- Energy methods remain the same ---
-    private int energy = 3;
-    public int getEnergy() { return energy; }
-    public void gainEnergy(int amount) { this.energy += amount; }
-    public boolean spendEnergy(int amount) {
-        if (this.energy >= amount) {
-            this.energy -= amount;
+    public boolean setActiveHero(int heroIndex) {
+        // -1 berarti tidak ada hero aktif yang dipilih
+        if (heroIndex == -1) {
+            this.activeHero = null;
             return true;
         }
+
+        if (heroIndex >= 0 && heroIndex < heroRoster.size()) {
+            Hero newActiveHero = heroRoster.get(heroIndex);
+            if (newActiveHero.isAlive()) { // Boleh memilih hero yang sama lagi
+                this.activeHero = newActiveHero;
+                return true;
+            }
+        }
         return false;
+    }
+
+    public List<Hero> getHeroRoster() {
+        return heroRoster;
+    }
+
+    public boolean hasLost() {
+        for (Hero hero : heroRoster) {
+            if (hero.isAlive()) {
+                return false;
+            }
+        }
+        return true;
     }
 }

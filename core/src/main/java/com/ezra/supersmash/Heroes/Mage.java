@@ -2,6 +2,7 @@ package com.ezra.supersmash.Heroes;
 
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.ezra.supersmash.Element;
 import com.ezra.supersmash.Hero;
 import com.ezra.supersmash.Rendering.AnimationComponent;
 import com.ezra.supersmash.Skills.Fireball;
@@ -11,7 +12,7 @@ import java.util.Map;
 
 public class Mage extends Hero {
     public Mage() {
-        super("Mage", 80, new Fireball(), createMageAnimations());
+        super("Mage", 80, new Fireball(), createMageAnimations(), Element.FIRE);
     }
 
     private static AnimationComponent createMageAnimations() {

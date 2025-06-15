@@ -2,6 +2,7 @@ package com.ezra.supersmash.Heroes;
 
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.ezra.supersmash.Element;
 import com.ezra.supersmash.Hero;
 import com.ezra.supersmash.Rendering.AnimationComponent;
 import com.ezra.supersmash.Skills.ShadowStrike;
@@ -11,7 +12,7 @@ import java.util.Map;
 
 public class Assassin extends Hero {
     public Assassin() {
-        super("Assassin", 70, new ShadowStrike(), createAssassinAnimations());
+        super("Assassin", 70, new ShadowStrike(), createAssassinAnimations(), Element.NEUTRAL);
     }
 
     private static AnimationComponent createAssassinAnimations() {
