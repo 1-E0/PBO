@@ -17,12 +17,14 @@ public class Mage extends Hero {
 
     private static AnimationComponent createMageAnimations() {
         Map<AnimationComponent.HeroState, Animation<TextureRegion>> animations = new HashMap<>();
-        Animation<TextureRegion> idleAnimation = AnimationComponent.createAnimation("characters/mage.png", 1, 1f);
 
-        animations.put(AnimationComponent.HeroState.IDLE, idleAnimation);
-        animations.put(AnimationComponent.HeroState.ATTACKING, idleAnimation);
-        animations.put(AnimationComponent.HeroState.HURT, idleAnimation);
-        animations.put(AnimationComponent.HeroState.DEAD, idleAnimation);
+        // Paths now point to the "characters" folder and use the new mage sprites.
+        // Frame counts are estimated from the provided sprite sheets.
+        animations.put(AnimationComponent.HeroState.IDLE, AnimationComponent.createAnimation("characters/mage_idle.png", 7, 0.1f)); //
+        animations.put(AnimationComponent.HeroState.ATTACKING, AnimationComponent.createAnimation("characters/mage_attack.png", 8, 0.08f)); //
+        animations.put(AnimationComponent.HeroState.HURT, AnimationComponent.createAnimation("characters/mage_hurt.png", 3, 0.1f)); //
+        animations.put(AnimationComponent.HeroState.DEAD, AnimationComponent.createAnimation("characters/mage_dead.png", 6, 0.15f)); //
+
         return new AnimationComponent(animations);
     }
 

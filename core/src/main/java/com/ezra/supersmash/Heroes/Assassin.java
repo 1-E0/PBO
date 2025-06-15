@@ -17,12 +17,14 @@ public class Assassin extends Hero {
 
     private static AnimationComponent createAssassinAnimations() {
         Map<AnimationComponent.HeroState, Animation<TextureRegion>> animations = new HashMap<>();
-        Animation<TextureRegion> idleAnimation = AnimationComponent.createAnimation("characters/assassin.png", 1, 1f);
 
-        animations.put(AnimationComponent.HeroState.IDLE, idleAnimation);
-        animations.put(AnimationComponent.HeroState.ATTACKING, idleAnimation);
-        animations.put(AnimationComponent.HeroState.HURT, idleAnimation);
-        animations.put(AnimationComponent.HeroState.DEAD, idleAnimation);
+        // Paths now point to the "characters" folder and use the new assassin sprites.
+        // Frame counts are estimated from the provided sprite sheets.
+        animations.put(AnimationComponent.HeroState.IDLE, AnimationComponent.createAnimation("characters/assassin_idle.png", 9, 0.1f));
+        animations.put(AnimationComponent.HeroState.ATTACKING, AnimationComponent.createAnimation("characters/assassin_attack.png", 6, 0.08f));
+        animations.put(AnimationComponent.HeroState.HURT, AnimationComponent.createAnimation("characters/assassin_hurt.png", 2, 0.1f));
+        animations.put(AnimationComponent.HeroState.DEAD, AnimationComponent.createAnimation("characters/assassin_dead.png", 5, 0.15f));
+
         return new AnimationComponent(animations);
     }
 

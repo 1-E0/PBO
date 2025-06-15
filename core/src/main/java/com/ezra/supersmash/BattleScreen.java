@@ -67,10 +67,11 @@ public class BattleScreen implements Screen {
         float yBottom = screenHeight * 0.25f;
         float[] yPositions = {yTop, yMiddle, yBottom};
 
-        float xP1_Back = screenWidth * 0.18f;
-        float xP1_Front = screenWidth * 0.23f;
-        float xP2_Back = screenWidth * 0.82f;
-        float xP2_Front = screenWidth * 0.77f;
+        // Adjusted X positions to bring heroes even closer to the center
+        float xP1_Back = screenWidth * 0.30f;
+        float xP1_Front = screenWidth * 0.35f;
+        float xP2_Back = screenWidth * 0.70f;
+        float xP2_Front = screenWidth * 0.65f;
 
         float[] xPositionsP1 = {xP1_Back, xP1_Front, xP1_Back};
         float[] xPositionsP2 = {xP2_Back, xP2_Front, xP2_Back};
@@ -80,9 +81,13 @@ public class BattleScreen implements Screen {
         float[] scales = {scaleTopBottom, scaleMiddle, scaleTopBottom};
         float baseCharHeight = screenHeight / 6.5f;
 
-        // Drawable untuk background kotak status
+        // Drawable for status box background
         Drawable statusBoxBg = skin.newDrawable("white", new Color(0, 0, 0, 0.6f));
         float statusBoxWidth = 160f;
+
+        // Horizontal offsets for status UI based on side, kept as before as user did not specify change here
+        float horizontalOffsetP1Status = 80f;
+        float horizontalOffsetP2Status = 110f;
 
         for (int i = 0; i < 3; i++) {
             float charHeight = baseCharHeight * scales[i];
@@ -93,17 +98,21 @@ public class BattleScreen implements Screen {
             float p1CharWidth = charHeight * getAspectRatio(p1Hero);
             p1HeroActors[i].setSize(p1CharWidth, charHeight);
             p1HeroActors[i].setPosition(xPositionsP1[i] - (p1CharWidth / 2), yPositions[i]);
-            stage.addActor(p1HeroActors[i]);
-            addHeroClickListener(p1HeroActors[i]);
 
             Table p1StatusBox = new Table();
             p1StatusBox.setBackground(statusBoxBg);
             p1HeroLabels[i] = new Label("-", skin);
             p1HeroLabels[i].setWrap(true);
             p1StatusBox.add(p1HeroLabels[i]).width(statusBoxWidth - 10).pad(5);
-            p1StatusBox.pack(); // Atur ukuran table agar pas dengan isinya
-            p1StatusBox.setPosition(p1HeroActors[i].getX() + p1CharWidth, p1HeroActors[i].getY() + (charHeight - p1StatusBox.getHeight()) / 2);
-            stage.addActor(p1StatusBox);
+            p1StatusBox.pack(); // Ensure table size is set before positioning
+
+            // Positioning the status box behind Player 1's hero, horizontally adjusted with P1-specific offset
+            // Vertically, position it slightly lower than the hero's vertical center to be more "behind"
+            p1StatusBox.setPosition(p1HeroActors[i].getX() + (p1CharWidth / 2) - (p1StatusBox.getWidth() / 2) - horizontalOffsetP1Status, p1HeroActors[i].getY() + (charHeight * 0.3f));
+            stage.addActor(p1StatusBox); // Add status box first so it's drawn underneath
+
+            stage.addActor(p1HeroActors[i]); // Add HeroActor after the status box, making it appear in front
+            addHeroClickListener(p1HeroActors[i]);
 
             // --- Player 2: Hero dan Kotak Statusnya ---
             Hero p2Hero = player2.getHeroRoster().get(i);
@@ -111,20 +120,24 @@ public class BattleScreen implements Screen {
             float p2CharWidth = charHeight * getAspectRatio(p2Hero);
             p2HeroActors[i].setSize(p2CharWidth, charHeight);
             p2HeroActors[i].setPosition(xPositionsP2[i] - (p2CharWidth / 2), yPositions[i]);
-            stage.addActor(p2HeroActors[i]);
-            addHeroClickListener(p2HeroActors[i]);
 
             Table p2StatusBox = new Table();
             p2StatusBox.setBackground(statusBoxBg);
             p2HeroLabels[i] = new Label("-", skin);
             p2HeroLabels[i].setWrap(true);
             p2StatusBox.add(p2HeroLabels[i]).width(statusBoxWidth - 10).pad(5);
-            p2StatusBox.pack();
-            p2StatusBox.setPosition(p2HeroActors[i].getX() - p2StatusBox.getWidth(), p2HeroActors[i].getY() + (charHeight - p2StatusBox.getHeight()) / 2);
-            stage.addActor(p2StatusBox);
+            p2StatusBox.pack(); // Ensure table size is set before positioning
+
+            // Positioning the status box behind Player 2's hero, horizontally adjusted with P2-specific offset
+            // Vertically, position it slightly lower than the hero's vertical center to be more "behind"
+            p2StatusBox.setPosition(p2HeroActors[i].getX() + (p2CharWidth / 2) - (p2StatusBox.getWidth() / 2) + horizontalOffsetP2Status, p2HeroActors[i].getY() + (charHeight * 0.3f));
+            stage.addActor(p2StatusBox); // Add status box first so it's drawn underneath
+
+            stage.addActor(p2HeroActors[i]); // Add HeroActor after the status box, making it appear in front
+            addHeroClickListener(p2HeroActors[i]);
         }
 
-        // --- Panel UI Atas dan Bawah ---
+        // --- Top and Bottom UI Panels ---
         Table topUiPanel = new Table();
         turnLabel = new Label("", skin);
         logLabel = new Label("", skin);
@@ -132,7 +145,7 @@ public class BattleScreen implements Screen {
         logLabel.setAlignment(Align.center);
         topUiPanel.add(turnLabel).pad(10).row();
         topUiPanel.add(logLabel).width(screenWidth * 0.4f).row();
-        root.add(topUiPanel).expand().top().padTop(20).row();
+        root.add(topUiPanel).expand().top().padTop(screenHeight * 0.05f).row();
 
         Table actionTable = new Table();
         actionTable.setBackground(skin.newDrawable("white", new Color(0, 0, 0, 0.5f)));
@@ -144,11 +157,9 @@ public class BattleScreen implements Screen {
         actionTable.add(endTurnButton).pad(10);
         addActionListeners();
 
-        root.add(new Table()).expandY().row(); // Spacer untuk mendorong panel bawah
+        root.add(new Table()).expandY().row(); // Spacer to push the bottom panel down
         root.add(actionTable).padBottom(10).bottom();
     }
-
-    // ... Sisa kode (addHeroClickListener, addActionListeners, render, dll.) tetap sama ...
 
     private void addHeroClickListener(HeroActor actor) {
         actor.addListener(new ClickListener() {

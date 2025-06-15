@@ -17,12 +17,14 @@ public class Tank extends Hero {
 
     private static AnimationComponent createTankAnimations() {
         Map<AnimationComponent.HeroState, Animation<TextureRegion>> animations = new HashMap<>();
-        Animation<TextureRegion> idleAnimation = AnimationComponent.createAnimation("characters/tank.png", 1, 1f);
 
-        animations.put(AnimationComponent.HeroState.IDLE, idleAnimation);
-        animations.put(AnimationComponent.HeroState.ATTACKING, idleAnimation);
-        animations.put(AnimationComponent.HeroState.HURT, idleAnimation);
-        animations.put(AnimationComponent.HeroState.DEAD, idleAnimation);
+        // Paths now point to the "characters" folder and use the new tank sprites.
+        // Frame counts are estimated from the provided sprite sheets.
+        animations.put(AnimationComponent.HeroState.IDLE, AnimationComponent.createAnimation("characters/tank_idle.png", 10, 0.1f)); //
+        animations.put(AnimationComponent.HeroState.ATTACKING, AnimationComponent.createAnimation("characters/tank_attack.png", 5, 0.08f)); //
+        animations.put(AnimationComponent.HeroState.HURT, AnimationComponent.createAnimation("characters/tank_hurt.png", 3, 0.1f)); //
+        animations.put(AnimationComponent.HeroState.DEAD, AnimationComponent.createAnimation("characters/tank_dead.png", 5, 0.15f)); //
+
         return new AnimationComponent(animations);
     }
 

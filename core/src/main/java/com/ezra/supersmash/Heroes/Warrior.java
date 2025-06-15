@@ -17,14 +17,14 @@ public class Warrior extends Hero {
 
     private static AnimationComponent createWarriorAnimations() {
         Map<AnimationComponent.HeroState, Animation<TextureRegion>> animations = new HashMap<>();
-        // Using a single static image for now
-        Animation<TextureRegion> idleAnimation = AnimationComponent.createAnimation("characters/warrior.png", 1, 1f);
 
-        animations.put(AnimationComponent.HeroState.IDLE, idleAnimation);
-        // Placeholder animations - they all point to the idle sprite
-        animations.put(AnimationComponent.HeroState.ATTACKING, idleAnimation);
-        animations.put(AnimationComponent.HeroState.HURT, idleAnimation);
-        animations.put(AnimationComponent.HeroState.DEAD, idleAnimation);
+        // Paths now point to the "characters" folder and use the new warrior sprites
+        // Assumed frame counts and durations based on common animation practices and Archer example
+        animations.put(AnimationComponent.HeroState.IDLE, AnimationComponent.createAnimation("characters/warrior_idle.png", 4, 0.1f));
+        animations.put(AnimationComponent.HeroState.ATTACKING, AnimationComponent.createAnimation("characters/warrior_attack.png", 5, 0.08f));
+        animations.put(AnimationComponent.HeroState.HURT, AnimationComponent.createAnimation("characters/warrior_hurt.png", 2, 0.1f));
+        animations.put(AnimationComponent.HeroState.DEAD, AnimationComponent.createAnimation("characters/warrior_dead.png", 6, 0.15f));
+
         return new AnimationComponent(animations);
     }
 
