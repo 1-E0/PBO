@@ -30,11 +30,6 @@ public abstract class Hero {
         this.animationComponent = animationComponent;
     }
 
-    /**
-     * Metode internal untuk menghitung damage output akhir setelah memperhitungkan
-     * status effect milik penyerang (seperti AttackDownEffect).
-     * Tetap protected karena ini adalah kalkulasi internal.
-     */
     protected int calculateDamage(int baseDamage) {
         float finalDamage = baseDamage;
         for (StatusEffect effect : this.activeEffects) {
@@ -45,11 +40,6 @@ public abstract class Hero {
         return (int) finalDamage;
     }
 
-    /**
-     * Metode publik baru untuk menangani proses penyerangan.
-     * Metode ini akan memanggil kalkulasi internal dan kemudian memberikan damage ke target.
-     * Ini adalah metode yang harus dipanggil oleh Skill dan basicAttack.
-     */
     public void dealDamage(Hero target, int baseDamage) {
         int finalDamage = calculateDamage(baseDamage);
         target.takeDamage(finalDamage);
@@ -136,5 +126,13 @@ public abstract class Hero {
 
     public String getName() {
         return name;
+    }
+
+    public int getCurrentHp() { return currentHp; }
+    public int getMaxHp() { return maxHp; }
+    public int getMaxEnergy() { return maxEnergy; }
+
+    public List<StatusEffect> getActiveEffects() {
+        return activeEffects;
     }
 }

@@ -7,18 +7,17 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.ezra.supersmash.Heroes.*; // Import semua kelas Hero
 import com.ezra.supersmash.Rendering.AnimationComponent;
 import com.ezra.supersmash.Rendering.HeroActor;
 
+import java.util.List;
 import java.util.Random;
 import java.util.function.Consumer;
 
@@ -29,12 +28,20 @@ public class BattleScreen implements Screen {
     private Texture background;
     private Player player1, player2, currentPlayer, opponent;
 
+    // Variabel dari kode Anda (Status Box)
+    private Table[] p1StatusTables = new Table[3];
+    private Table[] p2StatusTables = new Table[3];
+    private ProgressBar.ProgressBarStyle progressBarStyle;
+
+    // Variabel dari kode Tim (Panah Seleksi)
+    private Texture arrowTexture;
+    private Image selectionArrow;
+
     private Label turnLabel, logLabel;
-    private Label[] p1HeroLabels = new Label[3];
-    private Label[] p2HeroLabels = new Label[3];
     private HeroActor[] p1HeroActors = new HeroActor[3];
     private HeroActor[] p2HeroActors = new HeroActor[3];
     private TextButton attackButton, skillButton, endTurnButton;
+
 
     private enum BattleState { AWAITING_INPUT, PROCESSING }
     private BattleState currentState;
@@ -49,6 +56,14 @@ public class BattleScreen implements Screen {
         skin = new Skin(Gdx.files.internal("ui/uiskin.json"));
         background = new Texture(Gdx.files.internal(new String[]{"backgrounds/game_background_1.png", "backgrounds/game_background_2.png", "backgrounds/game_background_3.png", "backgrounds/game_background_4.png"}[new Random().nextInt(4)]));
 
+        // Inisialisasi dari kode Anda
+        progressBarStyle = skin.get("default-horizontal", ProgressBar.ProgressBarStyle.class);
+
+        // Inisialisasi dari kode Tim
+        arrowTexture = new Texture(Gdx.files.internal("misc/arrow.png")); // Pastikan path ini benar
+        selectionArrow = new Image(arrowTexture);
+        selectionArrow.setVisible(false);
+
         setupUI();
         startNewGame();
     }
@@ -62,30 +77,33 @@ public class BattleScreen implements Screen {
         float screenWidth = Gdx.graphics.getWidth();
         float screenHeight = Gdx.graphics.getHeight();
 
+        // Menggunakan posisi Y dari kode tim Anda
         float yTop = screenHeight * 0.55f;
         float yMiddle = screenHeight * 0.40f;
         float yBottom = screenHeight * 0.25f;
         float[] yPositions = {yTop, yMiddle, yBottom};
 
-        // Adjusted X positions to bring heroes closer to the center
-        float xP1_Back = screenWidth * 0.30f;
+        // Menggunakan posisi X dari kode tim Anda
+        float xP1_Back = screenWidth * 0.35f;
         float xP1_Front = screenWidth * 0.35f;
-        float xP2_Back = screenWidth * 0.70f;
+        float xP2_Back = screenWidth * 0.65f;
         float xP2_Front = screenWidth * 0.65f;
 
         float[] xPositionsP1 = {xP1_Back, xP1_Front, xP1_Back};
         float[] xPositionsP2 = {xP2_Back, xP2_Front, xP2_Back};
 
-        float scaleTopBottom = 1.0f;
-        float scaleMiddle = 1.2f;
+        // Menggunakan skala dari kode tim Anda
+        float scaleTopBottom = 1.3f;
+        float scaleMiddle = 1.3f;
         float[] scales = {scaleTopBottom, scaleMiddle, scaleTopBottom};
         float baseCharHeight = screenHeight / 6.5f;
 
-        // Drawable for status box background
-        Drawable statusBoxBg = skin.newDrawable("white", new Color(0, 0, 0, 0.6f));
+        // Menggunakan background transparan dari kode Anda
+        Drawable statusBoxBg = skin.newDrawable("rect", new Color(0.2f, 0.2f, 0.2f, 0.5f));
         float statusBoxWidth = 160f;
+        float statusBoxHeight = 100f;
 
-        // Increased horizontal offsets significantly to make status UI even more obscured ("lebih ke belakang lagi")
+        // Menggunakan offset dari kode Anda
         float horizontalOffsetP1Status = 120f;
         float horizontalOffsetP2Status = 150f;
 
@@ -99,20 +117,17 @@ public class BattleScreen implements Screen {
             p1HeroActors[i].setSize(p1CharWidth, charHeight);
             p1HeroActors[i].setPosition(xPositionsP1[i] - (p1CharWidth / 2), yPositions[i]);
 
-            Table p1StatusBox = new Table();
-            p1StatusBox.setBackground(statusBoxBg);
-            p1HeroLabels[i] = new Label("-", skin);
-            p1HeroLabels[i].setWrap(true);
-            p1StatusBox.add(p1HeroLabels[i]).width(statusBoxWidth - 10).pad(5);
-            p1StatusBox.pack(); // Ensure table size is set before positioning
-
-            // Positioning the status box behind Player 1's hero, horizontally adjusted with P1-specific offset
-            // Vertically, position it slightly lower than the hero's vertical center to be more "behind"
-            p1StatusBox.setPosition(p1HeroActors[i].getX() + (p1CharWidth / 2) - (p1StatusBox.getWidth() / 2) - horizontalOffsetP1Status, p1HeroActors[i].getY() + (charHeight * 0.3f));
-            stage.addActor(p1StatusBox); // Add status box first so it's drawn underneath
-
-            stage.addActor(p1HeroActors[i]); // Add HeroActor after the status box, making it appear in front
+            p1StatusTables[i] = new Table();
+            p1StatusTables[i].setBackground(statusBoxBg);
+            p1StatusTables[i].setSize(statusBoxWidth, statusBoxHeight);
+            p1StatusTables[i].setPosition(
+                p1HeroActors[i].getX() + (p1CharWidth / 2) - (p1StatusTables[i].getWidth() / 2) - horizontalOffsetP1Status,
+                p1HeroActors[i].getY() - 20f
+            );
+            stage.addActor(p1StatusTables[i]);
+            stage.addActor(p1HeroActors[i]);
             addHeroClickListener(p1HeroActors[i]);
+
 
             // --- Player 2: Hero dan Kotak Statusnya ---
             Hero p2Hero = player2.getHeroRoster().get(i);
@@ -121,28 +136,23 @@ public class BattleScreen implements Screen {
             p2HeroActors[i].setSize(p2CharWidth, charHeight);
             p2HeroActors[i].setPosition(xPositionsP2[i] - (p2CharWidth / 2), yPositions[i]);
 
-            Table p2StatusBox = new Table();
-            p2StatusBox.setBackground(statusBoxBg);
-            p2HeroLabels[i] = new Label("-", skin);
-            p2HeroLabels[i].setWrap(true);
-            p2StatusBox.add(p2HeroLabels[i]).width(statusBoxWidth - 10).pad(5);
-            p2StatusBox.pack(); // Ensure table size is set before positioning
-
-            // Positioning the status box behind Player 2's hero, horizontally adjusted with P2-specific offset
-            // Vertically, position it slightly lower than the hero's vertical center to be more "behind"
-            p2StatusBox.setPosition(p2HeroActors[i].getX() + (p2CharWidth / 2) - (p2StatusBox.getWidth() / 2) + horizontalOffsetP2Status, p2HeroActors[i].getY() + (charHeight * 0.3f));
-            stage.addActor(p2StatusBox); // Add status box first so it's drawn underneath
-
-            stage.addActor(p2HeroActors[i]); // Add HeroActor after the status box, making it appear in front
+            p2StatusTables[i] = new Table();
+            p2StatusTables[i].setBackground(statusBoxBg);
+            p2StatusTables[i].setSize(statusBoxWidth, statusBoxHeight);
+            p2StatusTables[i].setPosition(
+                p2HeroActors[i].getX() + (p2CharWidth / 2) - (p2StatusTables[i].getWidth() / 2) + horizontalOffsetP2Status,
+                p2HeroActors[i].getY() - 20f
+            );
+            stage.addActor(p2StatusTables[i]);
+            stage.addActor(p2HeroActors[i]);
             addHeroClickListener(p2HeroActors[i]);
         }
 
-        // --- Top and Bottom UI Panels ---
         Table topUiPanel = new Table();
-        topUiPanel.setBackground(skin.newDrawable("white", new Color(0, 0, 0, 0.5f))); // Added background for highlight
-        turnLabel = new Label("", skin, "highlighted"); // Uses the new 'highlighted' style
-        turnLabel.setFontScale(1.2f); // Increased font scale for emphasis
-        logLabel = new Label("", skin, "highlighted"); // Uses the new 'highlighted' style
+        topUiPanel.setBackground(skin.newDrawable("white", new Color(0, 0, 0, 0.7f)));
+        turnLabel = new Label("", skin, "highlighted");
+        turnLabel.setFontScale(1.2f);
+        logLabel = new Label("", skin, "highlighted");
         logLabel.setWrap(true);
         logLabel.setAlignment(Align.center);
         topUiPanel.add(turnLabel).pad(10).row();
@@ -159,9 +169,54 @@ public class BattleScreen implements Screen {
         actionTable.add(endTurnButton).pad(10);
         addActionListeners();
 
-        root.add(new Table()).expandY().row(); // Spacer to push the bottom panel down
+        root.add(new Table()).expandY().row();
         root.add(actionTable).padBottom(10).bottom();
+
+        // Menambahkan panah ke stage dari kode tim
+        stage.addActor(selectionArrow);
     }
+
+    // Menggunakan metode populateStatusBox dari kode Anda
+    private void populateStatusBox(Table box, Hero hero) {
+        box.clearChildren();
+
+        if (!hero.isAlive()) {
+            box.setVisible(false);
+            return;
+        }
+        box.setVisible(true);
+
+        box.pad(8f);
+        box.top().left();
+
+        box.add(new Label(hero.getName(), skin)).left().row();
+
+        ProgressBar hpBar = new ProgressBar(0, hero.getMaxHp(), 1, false, progressBarStyle);
+        hpBar.setValue(hero.getCurrentHp());
+        Label hpLabel = new Label(hero.getCurrentHp() + "/" + hero.getMaxHp(), skin);
+        hpLabel.setAlignment(Align.center);
+
+        Stack hpStack = new Stack();
+        hpStack.add(hpBar);
+        hpStack.add(hpLabel);
+        box.add(hpStack).width(box.getWidth() - 16).height(20).padTop(5).left().row();
+
+        Label energyLabel = new Label("Energy: " + hero.getEnergy() + "/" + hero.getMaxEnergy(), skin);
+        box.add(energyLabel).left().padTop(5).row();
+
+        List<StatusEffect> effects = hero.getActiveEffects();
+        if (!effects.isEmpty()) {
+            Table effectsTable = new Table();
+            for (StatusEffect effect : effects) {
+                Label effectLabel = new Label(effect.getName() + " (" + effect.getDuration() + ")", skin);
+                effectLabel.setFontScale(0.8f);
+                effectLabel.setColor(Color.ORANGE);
+                effectsTable.add(effectLabel).padRight(5);
+            }
+            box.add(effectsTable).left().padTop(5).row();
+        }
+    }
+
 
     private void addHeroClickListener(HeroActor actor) {
         actor.addListener(new ClickListener() {
@@ -304,13 +359,93 @@ public class BattleScreen implements Screen {
     private void updateUI() {
         turnLabel.setText(currentPlayer.getName() + "'s Turn");
 
+        // Menggunakan logika update status box dari kode Anda
         for(int i = 0; i < 3; i++) {
-            p1HeroLabels[i].setText(player1.getHeroRoster().get(i).getStatus());
-            p2HeroLabels[i].setText(player2.getHeroRoster().get(i).getStatus());
+            Hero p1Hero = player1.getHeroRoster().get(i);
+            populateStatusBox(p1StatusTables[i], p1Hero);
+            // Menggunakan highlight color dari kode Anda (GOLD)
+            p1StatusTables[i].setColor(player1.getActiveHero() == p1Hero ? Color.GOLD : Color.WHITE);
 
-            p1HeroLabels[i].getParent().setColor(player1.getHeroRoster().get(i) == player1.getActiveHero() ? Color.GOLD : Color.WHITE);
-            p2HeroLabels[i].getParent().setColor(player2.getHeroRoster().get(i) == player2.getActiveHero() ? Color.GOLD : Color.WHITE);
+            Hero p2Hero = player2.getHeroRoster().get(i);
+            populateStatusBox(p2StatusTables[i], p2Hero);
+            p2StatusTables[i].setColor(player2.getActiveHero() == p2Hero ? Color.GOLD : Color.WHITE);
         }
+
+        // --- MENGGABUNGKAN LOGIKA PANAH SELEKSI DARI KODE TIM ---
+        Hero activeHero = currentPlayer.getActiveHero();
+        if (activeHero != null && activeHero.isAlive()) {
+            HeroActor activeActor = null;
+            // Cari HeroActor yang sesuai dengan Hero yang aktif
+            for (HeroActor actor : p1HeroActors) {
+                if (actor.getHero() == activeHero) {
+                    activeActor = actor;
+                    break;
+                }
+            }
+            if (activeActor == null) {
+                for (HeroActor actor : p2HeroActors) {
+                    if (actor.getHero() == activeHero) {
+                        activeActor = actor;
+                        break;
+                    }
+                }
+            }
+
+            if (activeActor != null) {
+                Hero hero = activeActor.getHero();
+                float arrowX = activeActor.getX() + (activeActor.getWidth() / 2) - (selectionArrow.getWidth() / 2);
+                float arrowY = activeActor.getY() + activeActor.getHeight() + 15;
+
+                // Logika penyesuaian posisi panah
+                if (hero instanceof Warrior) {
+                    if(currentPlayer == player1){
+                        arrowX = activeActor.getX() + (activeActor.getWidth() / 2) - (selectionArrow.getWidth() / 2) - 55;
+                        arrowY = activeActor.getY() + activeActor.getHeight() - 80;
+                    }
+                    if(currentPlayer == player2){
+                        arrowX = activeActor.getX() + (activeActor.getWidth() / 2) - (selectionArrow.getWidth() / 2) + 55;
+                        arrowY = activeActor.getY() + activeActor.getHeight() - 80;
+                    }
+                } else if (hero instanceof Mage) {
+                    if(currentPlayer == player1){
+                        arrowX = activeActor.getX() + (activeActor.getWidth() / 2) - (selectionArrow.getWidth() / 2) - 20;
+                        arrowY = activeActor.getY() + activeActor.getHeight() - 80;
+                    }
+                    if(currentPlayer == player2){
+                        arrowX = activeActor.getX() + (activeActor.getWidth() / 2) - (selectionArrow.getWidth() / 2) + 20;
+                        arrowY = activeActor.getY() + activeActor.getHeight() - 80;
+                    }
+                } else if (hero instanceof Tank) {
+                    arrowX = activeActor.getX() + (activeActor.getWidth() / 2) - (selectionArrow.getWidth() / 2);
+                    arrowY = activeActor.getY() + activeActor.getHeight() - 50;
+                } else if (hero instanceof Archer){
+                    if(currentPlayer == player1){
+                        arrowX = activeActor.getX() + (activeActor.getWidth() / 2) - (selectionArrow.getWidth() / 2) + 5;
+                        arrowY = activeActor.getY() + activeActor.getHeight() - 70;
+                    }
+                    if(currentPlayer == player2){
+                        arrowX = activeActor.getX() + (activeActor.getWidth() / 2) - (selectionArrow.getWidth() / 2) - 5;
+                        arrowY = activeActor.getY() + activeActor.getHeight() - 70;
+                    }
+                } else if (hero instanceof Assassin){
+                    if(currentPlayer == player1){
+                        arrowX = activeActor.getX() + (activeActor.getWidth() / 2) - (selectionArrow.getWidth() / 2) - 5;
+                        arrowY = activeActor.getY() + activeActor.getHeight() - 85;
+                    }
+                    if(currentPlayer == player2){
+                        arrowX = activeActor.getX() + (activeActor.getWidth() / 2) - (selectionArrow.getWidth() / 2) + 5;
+                        arrowY = activeActor.getY() + activeActor.getHeight() - 85;
+                    }
+                }
+
+                selectionArrow.setPosition(arrowX, arrowY);
+                selectionArrow.setVisible(true);
+            }
+        } else {
+            selectionArrow.setVisible(false);
+        }
+        // --- AKHIR LOGIKA PANAH SELEKSI ---
+
 
         boolean canAct = currentState == BattleState.AWAITING_INPUT && currentPlayer.getActiveHero() != null;
         attackButton.setDisabled(!canAct);
@@ -323,5 +458,12 @@ public class BattleScreen implements Screen {
     @Override public void pause() {}
     @Override public void resume() {}
     @Override public void hide() {}
-    @Override public void dispose() { stage.dispose(); background.dispose(); skin.dispose(); }
+
+    // Menggabungkan dispose() dari kedua versi
+    @Override public void dispose() {
+        stage.dispose();
+        background.dispose();
+        skin.dispose();
+        arrowTexture.dispose(); // Jangan lupa dispose texture panah
+    }
 }
