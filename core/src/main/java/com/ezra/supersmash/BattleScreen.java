@@ -39,6 +39,7 @@ public class BattleScreen implements Screen {
     private enum BattleState { AWAITING_INPUT, PROCESSING }
     private BattleState currentState;
     private Consumer<Hero> onTargetSelected;
+    private boolean actionWasTaken = false; // <-- PENANDA AKSI DITAMBAHKAN
 
     public BattleScreen(Main game, Player player1, Player player2) {
         this.game = game;
@@ -82,8 +83,6 @@ public class BattleScreen implements Screen {
         float[] scales = {scaleTopBottom, scaleMiddle, scaleTopBottom};
         float baseCharHeight = screenHeight / 6.5f;
 
-        // --- PERUBAHAN: Membuat background dengan transparansi kustom (alpha = 0.5f) ---
-        // Warna dasar diambil dari skin (0.2f, 0.2f, 0.2f) agar konsisten.
         Drawable statusBoxBg = skin.newDrawable("rect", new Color(0.2f, 0.2f, 0.2f, 0.5f));
         float statusBoxWidth = 160f;
         float statusBoxHeight = 100f;
@@ -94,7 +93,6 @@ public class BattleScreen implements Screen {
         for (int i = 0; i < 3; i++) {
             float charHeight = baseCharHeight * scales[i];
 
-            // --- Player 1: Hero dan Kotak Statusnya ---
             Hero p1Hero = player1.getHeroRoster().get(i);
             p1HeroActors[i] = new HeroActor(p1Hero, false);
             float p1CharWidth = charHeight * getAspectRatio(p1Hero);
@@ -112,8 +110,6 @@ public class BattleScreen implements Screen {
             stage.addActor(p1HeroActors[i]);
             addHeroClickListener(p1HeroActors[i]);
 
-
-            // --- Player 2: Hero dan Kotak Statusnya ---
             Hero p2Hero = player2.getHeroRoster().get(i);
             p2HeroActors[i] = new HeroActor(p2Hero, true);
             float p2CharWidth = charHeight * getAspectRatio(p2Hero);
@@ -197,7 +193,6 @@ public class BattleScreen implements Screen {
         }
     }
 
-
     private void addHeroClickListener(HeroActor actor) {
         actor.addListener(new ClickListener() {
             @Override
@@ -257,6 +252,7 @@ public class BattleScreen implements Screen {
     private void executeAction(Hero attacker, Hero target, Runnable actionLogic) {
         currentState = BattleState.PROCESSING;
         onTargetSelected = null;
+        actionWasTaken = true; // <-- SET PENANDA KETIKA AKSI DILAKUKAN
 
         attacker.animationComponent.setState(AnimationComponent.HeroState.ATTACKING);
         actionLogic.run();
@@ -296,6 +292,7 @@ public class BattleScreen implements Screen {
     private void startNewTurn() {
         currentState = BattleState.PROCESSING;
         onTargetSelected = null;
+        actionWasTaken = false; // <-- RESET PENANDA DI AWAL GILIRAN
 
         for (Hero hero : currentPlayer.getHeroRoster()) {
             if (hero.isAlive()) {
@@ -311,9 +308,11 @@ public class BattleScreen implements Screen {
     private void endTurn() {
         if(checkForDefeatedHero()) return;
 
-        if (currentPlayer.getActiveHero() != null) {
+        // EFEK DIPROSES HANYA JIKA ADA AKSI YANG DIAMBIL
+        if (actionWasTaken && currentPlayer.getActiveHero() != null) {
             currentPlayer.getActiveHero().applyAndDecrementEffects();
         }
+
         if(checkForDefeatedHero()) return;
 
         Player temp = currentPlayer;
