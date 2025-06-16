@@ -1,5 +1,7 @@
 package com.ezra.supersmash.Heroes;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.ezra.supersmash.Element;
@@ -11,8 +13,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Warrior extends Hero {
+    private Sound swing;
+
     public Warrior() {
         super("Warrior", 120, new HammerSwing(), createWarriorAnimations(), Element.NEUTRAL);
+        swing = Gdx.audio.newSound(Gdx.files.internal("sounds/swing.mp3"));
+
     }
 
     private static AnimationComponent createWarriorAnimations() {
@@ -30,6 +36,7 @@ public class Warrior extends Hero {
 
     @Override
     public void basicAttack(Hero target) {
+        swing.play();
         System.out.println(name + " attacks with sword!");
         target.takeDamage(20);
     }
