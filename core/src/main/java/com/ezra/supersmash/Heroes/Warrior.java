@@ -4,7 +4,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.ezra.supersmash.Element;
 import com.ezra.supersmash.Hero;
 import com.ezra.supersmash.Rendering.AnimationComponent;
 import com.ezra.supersmash.Skills.HammerSwing;

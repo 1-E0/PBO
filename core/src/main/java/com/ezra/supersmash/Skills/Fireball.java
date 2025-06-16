@@ -1,9 +1,6 @@
 package com.ezra.supersmash.Skills;
 
-import com.ezra.supersmash.Element;
 import com.ezra.supersmash.Hero;
-import com.ezra.supersmash.ReactionManager;
-import com.ezra.supersmash.ReactionResult;
 import com.ezra.supersmash.Skill;
 
 public class Fireball implements Skill {
