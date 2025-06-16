@@ -27,6 +27,6 @@ public class Archer extends Hero {
     @Override
     public void basicAttack(Hero target) {
         System.out.println(name + " shoots an arrow!");
-        target.takeDamage(18);
+        dealDamage(target, 18); // Gunakan metode publik yang diwariskan
     }
 }

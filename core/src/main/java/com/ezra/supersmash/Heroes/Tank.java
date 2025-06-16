@@ -30,6 +30,6 @@ public class Tank extends Hero {
     @Override
     public void basicAttack(Hero target) {
         System.out.println(name + " charges forward!");
-        target.takeDamage(10);
+        dealDamage(target, 10); // Gunakan metode publik yang diwariskan
     }
 }

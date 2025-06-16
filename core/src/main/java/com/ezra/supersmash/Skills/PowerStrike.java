@@ -7,6 +7,6 @@ public class PowerStrike implements Skill {
     @Override
     public void activate(Hero self, Hero target) {
         System.out.println(self.getName() + " uses Power Strike!");
-        target.takeDamage(35);
+        self.dealDamage(target, 35); // Panggil metode publik baru
     }
 }

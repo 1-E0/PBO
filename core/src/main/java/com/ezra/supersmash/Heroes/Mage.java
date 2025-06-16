@@ -30,6 +30,6 @@ public class Mage extends Hero {
     @Override
     public void basicAttack(Hero target) {
         System.out.println(name + " attacks with magic missile!");
-        target.takeDamage(15);
+        dealDamage(target, 15); // Gunakan metode publik yang diwariskan
     }
 }

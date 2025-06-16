@@ -30,6 +30,6 @@ public class Assassin extends Hero {
     @Override
     public void basicAttack(Hero target) {
         System.out.println(name + " slashes swiftly!");
-        target.takeDamage(25);
+        dealDamage(target, 25); // Gunakan metode publik yang diwariskan
     }
 }

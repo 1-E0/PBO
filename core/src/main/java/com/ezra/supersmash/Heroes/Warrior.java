@@ -23,8 +23,6 @@ public class Warrior extends Hero {
     private static AnimationComponent createWarriorAnimations() {
         Map<AnimationComponent.HeroState, Animation<TextureRegion>> animations = new HashMap<>();
 
-        // Paths now point to the "characters" folder and use the new warrior sprites
-        // Assumed frame counts and durations based on common animation practices and Archer example
         animations.put(AnimationComponent.HeroState.IDLE, AnimationComponent.createAnimation("characters/warrior_idle.png", 4, 0.1f));
         animations.put(AnimationComponent.HeroState.ATTACKING, AnimationComponent.createAnimation("characters/warrior_attack.png", 5, 0.08f));
         animations.put(AnimationComponent.HeroState.HURT, AnimationComponent.createAnimation("characters/warrior_hurt.png", 2, 0.1f));
@@ -37,6 +35,6 @@ public class Warrior extends Hero {
     public void basicAttack(Hero target) {
         swing.play(0.5f);
         System.out.println(name + " attacks with sword!");
-        target.takeDamage(20);
+        dealDamage(target, 20); // Gunakan metode publik yang diwariskan
     }
 }
