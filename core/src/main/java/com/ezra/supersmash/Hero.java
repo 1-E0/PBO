@@ -14,8 +14,6 @@ public abstract class Hero {
     protected int currentHp;
     protected Skill skill;
     public AnimationComponent animationComponent;
-    protected Element element;
-    private Element appliedElement = Element.NEUTRAL;
 
     // --- ENERGI SEKARANG MILIK HERO ---
     protected int energy = 0;
@@ -23,13 +21,12 @@ public abstract class Hero {
 
     private List<StatusEffect> activeEffects = new ArrayList<>();
 
-    public Hero(String name, int hp, Skill skill, AnimationComponent animationComponent, Element element) {
+    public Hero(String name, int hp, Skill skill, AnimationComponent animationComponent) {
         this.name = name;
         this.maxHp = hp;
         this.currentHp = hp;
         this.skill = skill;
         this.animationComponent = animationComponent;
-        this.element = element;
     }
 
     public abstract void basicAttack(Hero target);
@@ -100,29 +97,12 @@ public abstract class Hero {
         }
     }
 
-    public Element getElement() {
-        return element;
-    }
-
-    public Element getAppliedElement() {
-        return appliedElement;
-    }
-
-    public void setAppliedElement(Element appliedElement) {
-        this.appliedElement = appliedElement;
-        System.out.println(this.name + " is now affected by " + appliedElement.name() + " element!");
-    }
-
     // --- getStatus() DIPERBARUI UNTUK MENAMPILKAN ENERGI ---
     public String getStatus() {
         StringBuilder status = new StringBuilder();
         status.append(name).append("\n");
         status.append("HP: ").append(currentHp).append("/").append(maxHp).append("\n");
         status.append("Energy: ").append(energy).append("/").append(maxEnergy);
-
-        if (appliedElement != Element.NEUTRAL) {
-            status.append("\n[").append(appliedElement.name()).append("]");
-        }
         return status.toString();
     }
 

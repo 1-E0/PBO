@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class Tank extends Hero {
     public Tank() {
-        super("Tank", 160, new ShieldBash(), createTankAnimations(), Element.NATURE);
+        super("Tank", 160, new ShieldBash(), createTankAnimations());
     }
 
     private static AnimationComponent createTankAnimations() {

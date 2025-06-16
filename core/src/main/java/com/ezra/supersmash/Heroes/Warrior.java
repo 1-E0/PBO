@@ -15,7 +15,7 @@ public class Warrior extends Hero {
     private Sound swing;
 
     public Warrior() {
-        super("Warrior", 120, new HammerSwing(), createWarriorAnimations(), Element.NEUTRAL);
+        super("Warrior", 120, new HammerSwing(), createWarriorAnimations());
         swing = Gdx.audio.newSound(Gdx.files.internal("sounds/swing.mp3"));
 
     }

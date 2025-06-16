@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class Mage extends Hero {
     public Mage() {
-        super("Mage", 80, new Fireball(), createMageAnimations(), Element.FIRE);
+        super("Mage", 80, new Fireball(), createMageAnimations());
     }
 
     private static AnimationComponent createMageAnimations() {

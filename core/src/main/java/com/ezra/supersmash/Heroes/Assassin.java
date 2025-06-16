@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class Assassin extends Hero {
     public Assassin() {
-        super("Assassin", 70, new ShadowStrike(), createAssassinAnimations(), Element.NEUTRAL);
+        super("Assassin", 70, new ShadowStrike(), createAssassinAnimations());
     }
 
     private static AnimationComponent createAssassinAnimations() {

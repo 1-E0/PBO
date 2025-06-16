@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class Archer extends Hero {
     public Archer() {
-        super("Archer", 90, new MultiShot(), createArcherAnimations(), Element.NEUTRAL);
+        super("Archer", 90, new MultiShot(), createArcherAnimations());
     }
 
     private static AnimationComponent createArcherAnimations() {
