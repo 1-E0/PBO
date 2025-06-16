@@ -13,7 +13,6 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.ezra.supersmash.Heroes.*; // Import semua kelas Hero
 import com.ezra.supersmash.Rendering.AnimationComponent;
 import com.ezra.supersmash.Rendering.HeroActor;
 
@@ -28,19 +27,13 @@ public class BattleScreen implements Screen {
     private Texture background;
     private Player player1, player2, currentPlayer, opponent;
 
-    // Variabel dari kode Anda (Status Box)
+    private Label turnLabel, logLabel;
     private Table[] p1StatusTables = new Table[3];
     private Table[] p2StatusTables = new Table[3];
-    private ProgressBar.ProgressBarStyle progressBarStyle;
-
-    // Variabel dari kode Tim (Panah Seleksi)
-    private Texture arrowTexture;
-    private Image selectionArrow;
-
-    private Label turnLabel, logLabel;
     private HeroActor[] p1HeroActors = new HeroActor[3];
     private HeroActor[] p2HeroActors = new HeroActor[3];
     private TextButton attackButton, skillButton, endTurnButton;
+    private ProgressBar.ProgressBarStyle progressBarStyle;
 
 
     private enum BattleState { AWAITING_INPUT, PROCESSING }
@@ -56,13 +49,7 @@ public class BattleScreen implements Screen {
         skin = new Skin(Gdx.files.internal("ui/uiskin.json"));
         background = new Texture(Gdx.files.internal(new String[]{"backgrounds/game_background_1.png", "backgrounds/game_background_2.png", "backgrounds/game_background_3.png", "backgrounds/game_background_4.png"}[new Random().nextInt(4)]));
 
-        // Inisialisasi dari kode Anda
         progressBarStyle = skin.get("default-horizontal", ProgressBar.ProgressBarStyle.class);
-
-        // Inisialisasi dari kode Tim
-        arrowTexture = new Texture(Gdx.files.internal("misc/arrow.png")); // Pastikan path ini benar
-        selectionArrow = new Image(arrowTexture);
-        selectionArrow.setVisible(false);
 
         setupUI();
         startNewGame();
@@ -77,33 +64,30 @@ public class BattleScreen implements Screen {
         float screenWidth = Gdx.graphics.getWidth();
         float screenHeight = Gdx.graphics.getHeight();
 
-        // Menggunakan posisi Y dari kode tim Anda
         float yTop = screenHeight * 0.55f;
         float yMiddle = screenHeight * 0.40f;
         float yBottom = screenHeight * 0.25f;
         float[] yPositions = {yTop, yMiddle, yBottom};
 
-        // Menggunakan posisi X dari kode tim Anda
-        float xP1_Back = screenWidth * 0.35f;
+        float xP1_Back = screenWidth * 0.30f;
         float xP1_Front = screenWidth * 0.35f;
-        float xP2_Back = screenWidth * 0.65f;
+        float xP2_Back = screenWidth * 0.70f;
         float xP2_Front = screenWidth * 0.65f;
 
         float[] xPositionsP1 = {xP1_Back, xP1_Front, xP1_Back};
         float[] xPositionsP2 = {xP2_Back, xP2_Front, xP2_Back};
 
-        // Menggunakan skala dari kode tim Anda
-        float scaleTopBottom = 1.3f;
-        float scaleMiddle = 1.3f;
+        float scaleTopBottom = 1.0f;
+        float scaleMiddle = 1.2f;
         float[] scales = {scaleTopBottom, scaleMiddle, scaleTopBottom};
         float baseCharHeight = screenHeight / 6.5f;
 
-        // Menggunakan background transparan dari kode Anda
+        // --- PERUBAHAN: Membuat background dengan transparansi kustom (alpha = 0.5f) ---
+        // Warna dasar diambil dari skin (0.2f, 0.2f, 0.2f) agar konsisten.
         Drawable statusBoxBg = skin.newDrawable("rect", new Color(0.2f, 0.2f, 0.2f, 0.5f));
         float statusBoxWidth = 160f;
         float statusBoxHeight = 100f;
 
-        // Menggunakan offset dari kode Anda
         float horizontalOffsetP1Status = 120f;
         float horizontalOffsetP2Status = 150f;
 
@@ -149,7 +133,7 @@ public class BattleScreen implements Screen {
         }
 
         Table topUiPanel = new Table();
-        topUiPanel.setBackground(skin.newDrawable("white", new Color(0, 0, 0, 0.7f)));
+        topUiPanel.setBackground(skin.newDrawable("white", new Color(0, 0, 0, 0.5f)));
         turnLabel = new Label("", skin, "highlighted");
         turnLabel.setFontScale(1.2f);
         logLabel = new Label("", skin, "highlighted");
@@ -171,12 +155,8 @@ public class BattleScreen implements Screen {
 
         root.add(new Table()).expandY().row();
         root.add(actionTable).padBottom(10).bottom();
-
-        // Menambahkan panah ke stage dari kode tim
-        stage.addActor(selectionArrow);
     }
 
-    // Menggunakan metode populateStatusBox dari kode Anda
     private void populateStatusBox(Table box, Hero hero) {
         box.clearChildren();
 
@@ -359,93 +339,15 @@ public class BattleScreen implements Screen {
     private void updateUI() {
         turnLabel.setText(currentPlayer.getName() + "'s Turn");
 
-        // Menggunakan logika update status box dari kode Anda
         for(int i = 0; i < 3; i++) {
             Hero p1Hero = player1.getHeroRoster().get(i);
             populateStatusBox(p1StatusTables[i], p1Hero);
-            // Menggunakan highlight color dari kode Anda (GOLD)
             p1StatusTables[i].setColor(player1.getActiveHero() == p1Hero ? Color.GOLD : Color.WHITE);
 
             Hero p2Hero = player2.getHeroRoster().get(i);
             populateStatusBox(p2StatusTables[i], p2Hero);
             p2StatusTables[i].setColor(player2.getActiveHero() == p2Hero ? Color.GOLD : Color.WHITE);
         }
-
-        // --- MENGGABUNGKAN LOGIKA PANAH SELEKSI DARI KODE TIM ---
-        Hero activeHero = currentPlayer.getActiveHero();
-        if (activeHero != null && activeHero.isAlive()) {
-            HeroActor activeActor = null;
-            // Cari HeroActor yang sesuai dengan Hero yang aktif
-            for (HeroActor actor : p1HeroActors) {
-                if (actor.getHero() == activeHero) {
-                    activeActor = actor;
-                    break;
-                }
-            }
-            if (activeActor == null) {
-                for (HeroActor actor : p2HeroActors) {
-                    if (actor.getHero() == activeHero) {
-                        activeActor = actor;
-                        break;
-                    }
-                }
-            }
-
-            if (activeActor != null) {
-                Hero hero = activeActor.getHero();
-                float arrowX = activeActor.getX() + (activeActor.getWidth() / 2) - (selectionArrow.getWidth() / 2);
-                float arrowY = activeActor.getY() + activeActor.getHeight() + 15;
-
-                // Logika penyesuaian posisi panah
-                if (hero instanceof Warrior) {
-                    if(currentPlayer == player1){
-                        arrowX = activeActor.getX() + (activeActor.getWidth() / 2) - (selectionArrow.getWidth() / 2) - 55;
-                        arrowY = activeActor.getY() + activeActor.getHeight() - 80;
-                    }
-                    if(currentPlayer == player2){
-                        arrowX = activeActor.getX() + (activeActor.getWidth() / 2) - (selectionArrow.getWidth() / 2) + 55;
-                        arrowY = activeActor.getY() + activeActor.getHeight() - 80;
-                    }
-                } else if (hero instanceof Mage) {
-                    if(currentPlayer == player1){
-                        arrowX = activeActor.getX() + (activeActor.getWidth() / 2) - (selectionArrow.getWidth() / 2) - 20;
-                        arrowY = activeActor.getY() + activeActor.getHeight() - 80;
-                    }
-                    if(currentPlayer == player2){
-                        arrowX = activeActor.getX() + (activeActor.getWidth() / 2) - (selectionArrow.getWidth() / 2) + 20;
-                        arrowY = activeActor.getY() + activeActor.getHeight() - 80;
-                    }
-                } else if (hero instanceof Tank) {
-                    arrowX = activeActor.getX() + (activeActor.getWidth() / 2) - (selectionArrow.getWidth() / 2);
-                    arrowY = activeActor.getY() + activeActor.getHeight() - 50;
-                } else if (hero instanceof Archer){
-                    if(currentPlayer == player1){
-                        arrowX = activeActor.getX() + (activeActor.getWidth() / 2) - (selectionArrow.getWidth() / 2) + 5;
-                        arrowY = activeActor.getY() + activeActor.getHeight() - 70;
-                    }
-                    if(currentPlayer == player2){
-                        arrowX = activeActor.getX() + (activeActor.getWidth() / 2) - (selectionArrow.getWidth() / 2) - 5;
-                        arrowY = activeActor.getY() + activeActor.getHeight() - 70;
-                    }
-                } else if (hero instanceof Assassin){
-                    if(currentPlayer == player1){
-                        arrowX = activeActor.getX() + (activeActor.getWidth() / 2) - (selectionArrow.getWidth() / 2) - 5;
-                        arrowY = activeActor.getY() + activeActor.getHeight() - 85;
-                    }
-                    if(currentPlayer == player2){
-                        arrowX = activeActor.getX() + (activeActor.getWidth() / 2) - (selectionArrow.getWidth() / 2) + 5;
-                        arrowY = activeActor.getY() + activeActor.getHeight() - 85;
-                    }
-                }
-
-                selectionArrow.setPosition(arrowX, arrowY);
-                selectionArrow.setVisible(true);
-            }
-        } else {
-            selectionArrow.setVisible(false);
-        }
-        // --- AKHIR LOGIKA PANAH SELEKSI ---
-
 
         boolean canAct = currentState == BattleState.AWAITING_INPUT && currentPlayer.getActiveHero() != null;
         attackButton.setDisabled(!canAct);
@@ -458,12 +360,5 @@ public class BattleScreen implements Screen {
     @Override public void pause() {}
     @Override public void resume() {}
     @Override public void hide() {}
-
-    // Menggabungkan dispose() dari kedua versi
-    @Override public void dispose() {
-        stage.dispose();
-        background.dispose();
-        skin.dispose();
-        arrowTexture.dispose(); // Jangan lupa dispose texture panah
-    }
+    @Override public void dispose() { stage.dispose(); background.dispose(); skin.dispose(); }
 }

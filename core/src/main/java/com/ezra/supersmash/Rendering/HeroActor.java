@@ -5,10 +5,10 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.ezra.supersmash.Hero;
 
-// HeroActor sekarang mewakili SATU hero spesifik.
+// HeroActor sekarang kembali menjadi Actor biasa.
 public class HeroActor extends Actor {
-    private Hero hero;
-    private boolean flipX = false;
+    private final Hero hero;
+    private final boolean flipX;
 
     public HeroActor(Hero hero, boolean flipX) {
         this.hero = hero;
@@ -22,7 +22,7 @@ public class HeroActor extends Actor {
     @Override
     public void act(float delta) {
         super.act(delta);
-        // Update animasi untuk hero yang diwakili oleh Actor ini
+        // Tetap update animasi untuk hero
         hero.animationComponent.update(delta);
     }
 
