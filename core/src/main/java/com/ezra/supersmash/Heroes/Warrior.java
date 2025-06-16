@@ -36,7 +36,7 @@ public class Warrior extends Hero {
 
     @Override
     public void basicAttack(Hero target) {
-        swing.play();
+        swing.play(0.5f);
         System.out.println(name + " attacks with sword!");
         target.takeDamage(20);
     }
