@@ -14,7 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.ezra.supersmash.Effects.TauntEffect;
+import com.ezra.supersmash.Effects.MockEffect;
 import com.ezra.supersmash.Effects.VulnerableEffect;
 import com.ezra.supersmash.Rendering.AnimationComponent;
 import com.ezra.supersmash.Rendering.HeroActor;
@@ -75,7 +75,7 @@ public class BattleScreen implements Screen {
             statusEffectIcons.put("Vulnerable", new Texture("icons/Vulnerable.png"));
             statusEffectIcons.put("Defense Up", new Texture("icons/defenseup.png"));
             statusEffectIcons.put("Attack Down", new Texture("icons/attackdown.png"));
-            statusEffectIcons.put("Taunt", new Texture("icons/taunt.png"));
+            statusEffectIcons.put("Mock", new Texture("icons/Mock.png"));
         } catch (Exception e) {
             System.err.println("Gagal memuat ikon status effect. Pastikan file gambar ada di folder 'assets/icons/'.");
             e.printStackTrace();
@@ -274,14 +274,14 @@ public class BattleScreen implements Screen {
                 effectLabel.setFontScale(0.8f);
                 effectLabel.setColor(Color.ORANGE);
 
-                // ===================================================================================
-                // === PERBAIKAN FINAL: Memaksa tinggi sel sesuai tinggi font ===
-                // ===================================================================================
-                // Dapatkan tinggi baris yang dibutuhkan oleh font, termasuk descender
+// ===================================================================================
+// === PERBAIKAN: Memaksa tinggi sel sesuai tinggi font ===
+// ===================================================================================
+// Dapatkan tinggi baris yang dibutuhkan oleh font, termasuk descender
                 BitmapFont font = effectLabel.getStyle().font;
                 float fontLineHeight = font.getLineHeight() * effectLabel.getFontScaleY();
 
-                // Tambahkan label ke sel dan paksakan tingginya
+// Tambahkan label ke sel dan paksakan tingginya
                 singleEffect.add(effectLabel).height(fontLineHeight);
 
                 effectsGroup.addActor(singleEffect);
@@ -307,20 +307,20 @@ public class BattleScreen implements Screen {
                     currentPlayer.setActiveHero(currentPlayer.getHeroRoster().indexOf(clickedHero));
                     logLabel.setText(clickedHero.getName() + " is active! Select an action or target.");
                 } else if (currentPlayer.getActiveHero() != null && opponent.getHeroRoster().contains(clickedHero) && clickedHero.isAlive()) {
-                    Hero tauntingHero = null;
+                    Hero MockingHero = null;
                     for (Hero hero : opponent.getHeroRoster()) {
                         if (!hero.isAlive()) continue;
                         for (StatusEffect effect : hero.getActiveEffects()) {
-                            if (effect instanceof TauntEffect) {
-                                tauntingHero = hero;
+                            if (effect instanceof MockEffect) {
+                                MockingHero = hero;
                                 break;
                             }
                         }
-                        if (tauntingHero != null) break;
+                        if (MockingHero != null) break;
                     }
 
-                    if (tauntingHero != null && clickedHero != tauntingHero) {
-                        logLabel.setText("You must attack " + tauntingHero.getName() + " due to Taunt!");
+                    if (MockingHero != null && clickedHero != MockingHero) {
+                        logLabel.setText("You must attack " + MockingHero.getName() + " due to Mock!");
                         return;
                     }
 

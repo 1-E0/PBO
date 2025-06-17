@@ -7,10 +7,10 @@ import com.ezra.supersmash.StatusEffect;
  * Efek ini memaksa lawan untuk menyerang hero yang memiliki efek ini.
  * Logika penegakannya ada di BattleScreen.
  */
-public class TauntEffect extends StatusEffect {
+public class MockEffect extends StatusEffect {
 
-    public TauntEffect(int duration) {
-        super("Taunt", duration);
+    public MockEffect(int duration) {
+        super("Mock ", duration);
     }
 
     @Override
