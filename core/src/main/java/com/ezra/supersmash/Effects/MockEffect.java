@@ -10,7 +10,7 @@ import com.ezra.supersmash.StatusEffect;
 public class MockEffect extends StatusEffect {
 
     public MockEffect(int duration) {
-        super("Mock ", duration);
+        super("Mock", duration);
     }
 
     @Override
