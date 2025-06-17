@@ -332,7 +332,10 @@ public class BattleScreen implements Screen {
     public void render(float delta) {
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
         updateUI();
+        processFloatingTextQueue(); // Panggil metode baru ini setiap frame
+
         stage.getBatch().begin();
         stage.getBatch().draw(background, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         stage.getBatch().end();
@@ -437,6 +440,54 @@ public class BattleScreen implements Screen {
         skin.dispose();
         for (Texture texture : statusEffectIcons.values()) {
             texture.dispose();
+        }
+    }
+    private void processFloatingTextQueue() {
+        // Cek apakah ada informasi damage di dalam antrian
+        if (!Hero.damageQueue.isEmpty()) {
+            // Proses setiap informasi damage
+            for (Hero.DamageInfo info : Hero.damageQueue) {
+                // Cari HeroActor yang sesuai dengan target hero
+                HeroActor targetActor = null;
+                for (HeroActor actor : p1HeroActors) {
+                    if (actor.getHero() == info.target) {
+                        targetActor = actor;
+                        break;
+                    }
+                }
+                if (targetActor == null) {
+                    for (HeroActor actor : p2HeroActors) {
+                        if (actor.getHero() == info.target) {
+                            targetActor = actor;
+                            break;
+                        }
+                    }
+                }
+
+                // Jika actor ditemukan, tampilkan floating text
+                if (targetActor != null) {
+                    String text = String.valueOf(info.amount);
+                    Color color = Color.WHITE;
+
+                    // Atur teks dan warna berdasarkan apakah damage kritikal atau tidak
+                    if (info.isCritical) {
+                        text = "CRIT! " + text;
+                        color = Color.YELLOW;
+                    }
+
+                    FloatingText ft = new FloatingText(text, skin, color);
+                    // Atur posisi awal teks di tengah atas dari sprite hero
+                    ft.setPosition(
+                        targetActor.getX() + targetActor.getWidth() / 2 - ft.getPrefWidth() / 2,
+                        targetActor.getY() + targetActor.getHeight()
+                    );
+
+                    stage.addActor(ft);
+                    ft.animate();
+                }
+            }
+            // Bersihkan antrian setelah semua diproses
+            Hero.damageQueue.clear();
         }
     }
 }

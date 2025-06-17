@@ -8,15 +8,32 @@ import java.util.Iterator;
 import java.util.List;
 
 public abstract class Hero {
+    // --- DATA UNTUK CRITICAL HIT ---
+    private static final float CRIT_CHANCE = 0.20f; // Peluang 20%
+    private static final float CRIT_MULTIPLIER = 2.0f; // Damage 2x lipat
+
+    // --- ANTRIAN UNTUK FLOATING TEXT ---
+    public static class DamageInfo {
+        public Hero target;
+        public int amount;
+        public boolean isCritical;
+
+        public DamageInfo(Hero target, int amount, boolean isCritical) {
+            this.target = target;
+            this.amount = amount;
+            this.isCritical = isCritical;
+        }
+    }
+    public static final List<DamageInfo> damageQueue = new ArrayList<>();
+
+
     public String name;
     protected int maxHp;
     protected int currentHp;
     protected Skill skill;
     public AnimationComponent animationComponent;
-
     protected int energy = 0;
     protected int maxEnergy = 3;
-
     private List<StatusEffect> activeEffects = new ArrayList<>();
 
     public Hero(String name, int hp, Skill skill, AnimationComponent animationComponent) {
@@ -27,21 +44,29 @@ public abstract class Hero {
         this.animationComponent = animationComponent;
     }
 
-    protected int calculateDamage(int baseDamage) {
+    protected int calculateDamage(int baseDamage, boolean isCritical) {
         float finalDamage = baseDamage;
+        // Terapkan modifikasi dari status Attack Down
         for (StatusEffect effect : this.activeEffects) {
             if (effect instanceof AttackDownEffect) {
                 finalDamage *= (1.0f - ((AttackDownEffect) effect).attackReduction);
             }
         }
+        // Terapkan damage critical
+        if (isCritical) {
+            finalDamage *= CRIT_MULTIPLIER;
+        }
         return (int) finalDamage;
     }
 
     public void dealDamage(Hero target, int baseDamage) {
-        int finalDamage = calculateDamage(baseDamage);
-        target.takeDamage(finalDamage);
+        // Tentukan apakah serangan ini kritikal atau tidak
+        boolean isCritical = Math.random() < CRIT_CHANCE;
+        // Hitung final damage berdasarkan status penyerang dan status kritikal
+        int finalDamage = calculateDamage(baseDamage, isCritical);
+        // Target menerima damage
+        target.takeDamage(finalDamage, isCritical);
     }
-
 
     public abstract void basicAttack(Hero target);
 
@@ -61,7 +86,12 @@ public abstract class Hero {
         return false;
     }
 
+    // Overload untuk damage biasa (seperti dari Burn/Bleed) yang tidak bisa kritikal
     public void takeDamage(int damage) {
+        takeDamage(damage, false);
+    }
+
+    public void takeDamage(int damage, boolean isCritical) {
         float finalDamage = damage;
 
         Iterator<StatusEffect> iterator = activeEffects.iterator();
@@ -76,11 +106,15 @@ public abstract class Hero {
             }
         }
 
-        if (damage > 0) {
+        int finalDamageInt = (int) finalDamage;
+
+        if (finalDamageInt > 0) {
             this.animationComponent.setState(AnimationComponent.HeroState.HURT);
+            // Tambahkan informasi damage ke antrian untuk ditampilkan oleh BattleScreen
+            damageQueue.add(new DamageInfo(this, finalDamageInt, isCritical));
         }
 
-        currentHp -= (int)finalDamage;
+        currentHp -= finalDamageInt;
         if (currentHp <= 0) {
             currentHp = 0;
             this.animationComponent.setState(AnimationComponent.HeroState.DEAD);
@@ -106,9 +140,7 @@ public abstract class Hero {
     }
 
     public void applyAndDecrementEffects() {
-        // --- LOGIKA BARU UNTUK MENCEGAH CONCURRENT MODIFICATION ---
         int damageOverTime = 0;
-
         Iterator<StatusEffect> iterator = activeEffects.iterator();
         while (iterator.hasNext()) {
             StatusEffect effect = iterator.next();
@@ -117,15 +149,10 @@ public abstract class Hero {
                 continue;
             }
 
-            // Panggil onTurnEnd, yang mungkin akan menghitung damage (Burn/Bleed)
-            // Kita modifikasi efeknya agar mengembalikan damage, bukan langsung memanggil takeDamage().
-            // Untuk sekarang, kita akan lakukan refactoring di sini saja.
             if (effect instanceof BurnEffect) {
-                damageOverTime += 5; // Asumsi damage Burn adalah 5
-                System.out.println(this.getName() + " takes " + 5 + " damage from being on fire!");
+                damageOverTime += 5;
             } else if (effect instanceof BleedEffect) {
-                damageOverTime += 5; // Asumsi damage Bleed adalah 5
-                System.out.println(this.getName() + " takes " + 5 + " damage from bleeding!");
+                damageOverTime += 5;
             } else {
                 effect.onTurnEnd(this);
             }
@@ -136,7 +163,6 @@ public abstract class Hero {
             }
         }
 
-        // Terapkan total damage dari semua efek setelah iterasi selesai.
         if (damageOverTime > 0) {
             this.takeDamage(damageOverTime);
         }
