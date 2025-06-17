@@ -110,9 +110,8 @@ public class BattleScreen implements Screen {
         float statusBoxWidth = 160f;
         float statusBoxHeight = 100f;
 
-        // --- NILAI OFFSET DIUBAH DI SINI ---
-        float horizontalOffsetP1Status = 160f; // Digeser dari 120f
-        float horizontalOffsetP2Status = 180f; // Digeser dari 150f
+        float horizontalOffsetP1Status = 160f;
+        float horizontalOffsetP2Status = 180f;
 
         for (int i = 0; i < 3; i++) {
             float charHeight = baseCharHeight * scales[i];
@@ -251,6 +250,13 @@ public class BattleScreen implements Screen {
                 if (currentState != BattleState.AWAITING_INPUT) return;
                 Hero clickedHero = actor.getHero();
                 if (currentPlayer.getHeroRoster().contains(clickedHero) && clickedHero.isAlive()) {
+
+                    // Cek apakah hero yang diklik sedang dalam kondisi stun
+                    if (clickedHero.isStunned()) {
+                        logLabel.setText(clickedHero.getName() + " is stunned and cannot act!");
+                        return; // Hentikan proses, hero tidak bisa dipilih
+                    }
+
                     currentPlayer.setActiveHero(currentPlayer.getHeroRoster().indexOf(clickedHero));
                     logLabel.setText(clickedHero.getName() + " is active! Select an action or target.");
                 } else if (currentPlayer.getActiveHero() != null && opponent.getHeroRoster().contains(clickedHero) && clickedHero.isAlive()) {

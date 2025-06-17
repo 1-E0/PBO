@@ -10,7 +10,7 @@ public class HammerSwing implements Skill {
         System.out.println(self.getName() + " uses Hammer Swing!");
         self.dealDamage(target, 20); // Panggil metode publik baru
         if (Math.random() < 0.5) {
-            target.addStatusEffect(new StunEffect(1));
+            target.addStatusEffect(new StunEffect(2));
         }
     }
 }
