@@ -7,6 +7,8 @@ public class Player {
     private List<Hero> heroRoster;
     private Hero activeHero;
     private String name;
+    private List<Scroll> scrolls = new ArrayList<>(); // Tambahkan ini
+    private static final int MAX_SCROLLS = 3; // Tambahkan ini
 
     public Player(String name, List<Hero> heroes) {
         if (heroes == null || heroes.isEmpty()) {
@@ -17,10 +19,29 @@ public class Player {
         // Awalnya tidak ada hero aktif, pemain harus memilih
         this.activeHero = null;
     }
+    public List<Scroll> getScrolls() {
+        return scrolls;
+    }
+
+    public boolean canAddScroll() {
+        return scrolls.size() < MAX_SCROLLS;
+    }
+
+    public void addScroll(Scroll scroll) {
+        if (canAddScroll()) {
+            scrolls.add(scroll);
+        }
+    }
+
+    public void removeScroll(Scroll scroll) {
+        scrolls.remove(scroll);
+        scroll.dispose(); // Hapus texture dari memori untuk mencegah memory leak
+    }
 
     public Hero getActiveHero() {
         return activeHero;
     }
+
 
     public String getName() {
         return name;

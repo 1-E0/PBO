@@ -26,6 +26,10 @@ public class HeroActor extends Actor {
         hero.animationComponent.update(delta);
     }
 
+    /**
+     * Ganti seluruh metode draw() lama dengan yang baru ini.
+     * Perbaikan utama ada pada baris: batch.getColor().cpy()
+     */
     @Override
     public void draw(Batch batch, float parentAlpha) {
         if (hero == null) return;
@@ -38,8 +42,9 @@ public class HeroActor extends Actor {
             currentFrame.flip(true, false);
         }
 
-        // Simpan warna asli batch
-        Color originalColor = batch.getColor();
+        // Simpan SALINAN warna asli batch
+        Color originalColor = batch.getColor().cpy(); // <-- PERBAIKAN KRUSIAL ADA DI SINI
+
         if (hero.isStunned()) {
             // Jika hero stun, gambar dengan warna keabu-abuan
             batch.setColor(Color.GRAY);
@@ -53,17 +58,14 @@ public class HeroActor extends Actor {
 
     @Override
     public Actor hit(float x, float y, boolean touchable) {
-        // Aktor yang di-disable tidak bisa di-klik.
         if (touchable && getTouchable() != Touchable.enabled) return null;
 
-        // Definisikan tinggi hitbox kustom (misalnya, 70% dari tinggi total).
         float hitboxHeight = getHeight() * 0.7f;
 
-        // Periksa apakah koordinat klik (x, y) berada di dalam hitbox kustom kita.
         if (x >= 0 && x < getWidth() && y >= 0 && y < hitboxHeight) {
-            return this; // Klik valid!
+            return this;
         }
 
-        return null; // Klik di luar hitbox kustom.
+        return null;
     }
 }
