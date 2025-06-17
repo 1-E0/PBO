@@ -5,6 +5,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
@@ -13,6 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.ezra.supersmash.Effects.TauntEffect;
 import com.ezra.supersmash.Effects.VulnerableEffect;
 import com.ezra.supersmash.Rendering.AnimationComponent;
 import com.ezra.supersmash.Rendering.HeroActor;
@@ -73,6 +75,7 @@ public class BattleScreen implements Screen {
             statusEffectIcons.put("Vulnerable", new Texture("icons/Vulnerable.png"));
             statusEffectIcons.put("Defense Up", new Texture("icons/defenseup.png"));
             statusEffectIcons.put("Attack Down", new Texture("icons/attackdown.png"));
+            statusEffectIcons.put("Taunt", new Texture("icons/taunt.png"));
         } catch (Exception e) {
             System.err.println("Gagal memuat ikon status effect. Pastikan file gambar ada di folder 'assets/icons/'.");
             e.printStackTrace();
@@ -107,45 +110,64 @@ public class BattleScreen implements Screen {
         float baseCharHeight = screenHeight / 6.5f;
 
         Drawable statusBoxBg = skin.newDrawable("rect", new Color(0.2f, 0.2f, 0.2f, 0.5f));
-        float statusBoxWidth = 160f;
-        float statusBoxHeight = 100f;
+
+        float statusBoxWidth = 190f;
+        float statusBoxHeight = 110f;
 
         float horizontalOffsetP1Status = 160f;
         float horizontalOffsetP2Status = 180f;
 
         for (int i = 0; i < 3; i++) {
-            float charHeight = baseCharHeight * scales[i];
-
+            float charHeightP1 = baseCharHeight * scales[i];
             Hero p1Hero = player1.getHeroRoster().get(i);
             p1HeroActors[i] = new HeroActor(p1Hero, false);
-            float p1CharWidth = charHeight * getAspectRatio(p1Hero);
-            p1HeroActors[i].setSize(p1CharWidth, charHeight);
+            float p1CharWidth = charHeightP1 * getAspectRatio(p1Hero);
+            p1HeroActors[i].setSize(p1CharWidth, charHeightP1);
             p1HeroActors[i].setPosition(xPositionsP1[i] - (p1CharWidth / 2), yPositions[i]);
 
             p1StatusTables[i] = new Table();
             p1StatusTables[i].setBackground(statusBoxBg);
             p1StatusTables[i].setSize(statusBoxWidth, statusBoxHeight);
-            p1StatusTables[i].setPosition(
-                p1HeroActors[i].getX() + (p1CharWidth / 2) - (p1StatusTables[i].getWidth() / 2) - horizontalOffsetP1Status,
-                p1HeroActors[i].getY() - 20f
-            );
+
+            float p1BoxX = p1HeroActors[i].getX() + (p1CharWidth / 2) - (p1StatusTables[i].getWidth() / 2) - horizontalOffsetP1Status;
+            float p1BoxY = p1HeroActors[i].getY() - 20f;
+
+            if (i > 0) {
+                Table previousBox = p1StatusTables[i - 1];
+                float bottomOfPreviousBox = previousBox.getY() - previousBox.getHeight();
+                if (p1BoxY > bottomOfPreviousBox) {
+                    p1BoxY = bottomOfPreviousBox - 5f;
+                }
+            }
+            p1StatusTables[i].setPosition(p1BoxX, p1BoxY);
+
             stage.addActor(p1StatusTables[i]);
             stage.addActor(p1HeroActors[i]);
             addHeroClickListener(p1HeroActors[i]);
 
+            float charHeightP2 = baseCharHeight * scales[i];
             Hero p2Hero = player2.getHeroRoster().get(i);
             p2HeroActors[i] = new HeroActor(p2Hero, true);
-            float p2CharWidth = charHeight * getAspectRatio(p2Hero);
-            p2HeroActors[i].setSize(p2CharWidth, charHeight);
+            float p2CharWidth = charHeightP2 * getAspectRatio(p2Hero);
+            p2HeroActors[i].setSize(p2CharWidth, charHeightP2);
             p2HeroActors[i].setPosition(xPositionsP2[i] - (p2CharWidth / 2), yPositions[i]);
 
             p2StatusTables[i] = new Table();
             p2StatusTables[i].setBackground(statusBoxBg);
             p2StatusTables[i].setSize(statusBoxWidth, statusBoxHeight);
-            p2StatusTables[i].setPosition(
-                p2HeroActors[i].getX() + (p2CharWidth / 2) - (p2StatusTables[i].getWidth() / 2) + horizontalOffsetP2Status,
-                p2HeroActors[i].getY() - 20f
-            );
+
+            float p2BoxX = p2HeroActors[i].getX() + (p2CharWidth / 2) - (p2StatusTables[i].getWidth() / 2) + horizontalOffsetP2Status;
+            float p2BoxY = p2HeroActors[i].getY() - 20f;
+
+            if (i > 0) {
+                Table previousBox = p2StatusTables[i - 1];
+                float bottomOfPreviousBox = previousBox.getY() - previousBox.getHeight();
+                if (p2BoxY > bottomOfPreviousBox) {
+                    p2BoxY = bottomOfPreviousBox - 5f;
+                }
+            }
+            p2StatusTables[i].setPosition(p2BoxX, p2BoxY);
+
             stage.addActor(p2StatusTables[i]);
             stage.addActor(p2HeroActors[i]);
             addHeroClickListener(p2HeroActors[i]);
@@ -189,6 +211,9 @@ public class BattleScreen implements Screen {
         root.add(actionTable).padBottom(10).bottom();
     }
 
+    // ===================================================================================
+    // === METODE DENGAN KODE YANG SUDAH DIPERBAIKI ===
+    // ===================================================================================
     private void populateStatusBox(Table box, Hero hero) {
         box.clearChildren();
 
@@ -211,20 +236,31 @@ public class BattleScreen implements Screen {
         Stack hpStack = new Stack();
         hpStack.add(hpBar);
         hpStack.add(hpLabel);
-        box.add(hpStack).width(box.getWidth() - 16).height(20).padTop(5).left().row();
+        float availableWidth = box.getWidth() - (box.getPadLeft() + box.getPadRight());
+        box.add(hpStack).width(availableWidth).height(20).padTop(5).left().row();
 
         Label energyLabel = new Label("Energy: " + hero.getEnergy() + "/" + hero.getMaxEnergy(), skin);
         box.add(energyLabel).left().padTop(5).row();
 
         List<StatusEffect> effects = hero.getActiveEffects();
         if (!effects.isEmpty()) {
-            Table effectsTable = new Table();
-            effectsTable.left();
+            HorizontalGroup effectsGroup = new HorizontalGroup();
+            effectsGroup.wrap();
+            effectsGroup.space(4f);
+            effectsGroup.wrapSpace(2f);
+            effectsGroup.rowAlign(Align.left);
+
             for (StatusEffect effect : effects) {
+                Table singleEffect = new Table();
+
+                // Spasi horizontal untuk mencegah clipping kiri
+                singleEffect.add().width(3f);
+
                 Texture iconTexture = statusEffectIcons.get(effect.getName());
                 if (iconTexture != null) {
                     Image iconImage = new Image(iconTexture);
-                    effectsTable.add(iconImage).size(16, 16).padRight(3);
+                    // Atur alignment ikon ke bawah untuk menyamakannya dengan baseline teks
+                    singleEffect.add(iconImage).size(16, 16).padRight(3f).align(Align.bottom);
                 }
 
                 String labelText;
@@ -237,9 +273,21 @@ public class BattleScreen implements Screen {
                 Label effectLabel = new Label(labelText, skin);
                 effectLabel.setFontScale(0.8f);
                 effectLabel.setColor(Color.ORANGE);
-                effectsTable.add(effectLabel).padRight(8);
+
+                // ===================================================================================
+                // === PERBAIKAN FINAL: Memaksa tinggi sel sesuai tinggi font ===
+                // ===================================================================================
+                // Dapatkan tinggi baris yang dibutuhkan oleh font, termasuk descender
+                BitmapFont font = effectLabel.getStyle().font;
+                float fontLineHeight = font.getLineHeight() * effectLabel.getFontScaleY();
+
+                // Tambahkan label ke sel dan paksakan tingginya
+                singleEffect.add(effectLabel).height(fontLineHeight);
+
+                effectsGroup.addActor(singleEffect);
             }
-            box.add(effectsTable).left().padTop(5).row();
+
+            box.add(effectsGroup).width(availableWidth).left().padTop(5f).row();
         }
     }
 
@@ -251,15 +299,31 @@ public class BattleScreen implements Screen {
                 Hero clickedHero = actor.getHero();
                 if (currentPlayer.getHeroRoster().contains(clickedHero) && clickedHero.isAlive()) {
 
-                    // Cek apakah hero yang diklik sedang dalam kondisi stun
                     if (clickedHero.isStunned()) {
                         logLabel.setText(clickedHero.getName() + " is stunned and cannot act!");
-                        return; // Hentikan proses, hero tidak bisa dipilih
+                        return;
                     }
 
                     currentPlayer.setActiveHero(currentPlayer.getHeroRoster().indexOf(clickedHero));
                     logLabel.setText(clickedHero.getName() + " is active! Select an action or target.");
                 } else if (currentPlayer.getActiveHero() != null && opponent.getHeroRoster().contains(clickedHero) && clickedHero.isAlive()) {
+                    Hero tauntingHero = null;
+                    for (Hero hero : opponent.getHeroRoster()) {
+                        if (!hero.isAlive()) continue;
+                        for (StatusEffect effect : hero.getActiveEffects()) {
+                            if (effect instanceof TauntEffect) {
+                                tauntingHero = hero;
+                                break;
+                            }
+                        }
+                        if (tauntingHero != null) break;
+                    }
+
+                    if (tauntingHero != null && clickedHero != tauntingHero) {
+                        logLabel.setText("You must attack " + tauntingHero.getName() + " due to Taunt!");
+                        return;
+                    }
+
                     if (onTargetSelected != null) {
                         onTargetSelected.accept(clickedHero);
                     }
@@ -334,7 +398,7 @@ public class BattleScreen implements Screen {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         updateUI();
-        processFloatingTextQueue(); // Panggil metode baru ini setiap frame
+        processFloatingTextQueue();
 
         stage.getBatch().begin();
         stage.getBatch().draw(background, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -443,11 +507,8 @@ public class BattleScreen implements Screen {
         }
     }
     private void processFloatingTextQueue() {
-        // Cek apakah ada informasi damage di dalam antrian
         if (!Hero.damageQueue.isEmpty()) {
-            // Proses setiap informasi damage
             for (Hero.DamageInfo info : Hero.damageQueue) {
-                // Cari HeroActor yang sesuai dengan target hero
                 HeroActor targetActor = null;
                 for (HeroActor actor : p1HeroActors) {
                     if (actor.getHero() == info.target) {
@@ -464,19 +525,16 @@ public class BattleScreen implements Screen {
                     }
                 }
 
-                // Jika actor ditemukan, tampilkan floating text
                 if (targetActor != null) {
                     String text = String.valueOf(info.amount);
                     Color color = Color.WHITE;
 
-                    // Atur teks dan warna berdasarkan apakah damage kritikal atau tidak
                     if (info.isCritical) {
                         text = "CRIT! " + text;
                         color = Color.YELLOW;
                     }
 
                     FloatingText ft = new FloatingText(text, skin, color);
-                    // Atur posisi awal teks di tengah atas dari sprite hero
                     ft.setPosition(
                         targetActor.getX() + targetActor.getWidth() / 2 - ft.getPrefWidth() / 2,
                         targetActor.getY() + targetActor.getHeight()
@@ -486,7 +544,6 @@ public class BattleScreen implements Screen {
                     ft.animate();
                 }
             }
-            // Bersihkan antrian setelah semua diproses
             Hero.damageQueue.clear();
         }
     }
