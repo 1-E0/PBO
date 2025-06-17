@@ -43,7 +43,7 @@ public abstract class Hero {
         this.skill = skill;
         this.animationComponent = animationComponent;
     }
-    // Dalam file Hero.java
+
     public void gainHealth(int amount) {
         this.currentHp = Math.min(this.currentHp + amount, this.maxHp);
         // Mungkin tambahkan juga floating text untuk healing

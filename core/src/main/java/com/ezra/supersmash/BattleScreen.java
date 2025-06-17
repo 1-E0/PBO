@@ -475,27 +475,6 @@ public class BattleScreen implements Screen {
         currentPlayer = player1;
         opponent = player2;
 
-        // ================================================================
-        // ===== JALAN PINTAS UNTUK DEBUGGING (Berikan Scroll Instan) =====
-        // ================================================================
-        // Pastikan daftar scroll tidak kosong sebelum mencoba memberikannya.
-        if (allPossibleScrolls != null && !allPossibleScrolls.isEmpty()) {
-            // Beri 2 scroll ke Player 1 agar bisa langsung tes tumpukan vertikal.
-            player1.addScroll(createScrollInstance(allPossibleScrolls.get(0).getClass()));
-
-            // Cek jika ada lebih dari satu jenis scroll, untuk menghindari error.
-            if (allPossibleScrolls.size() > 1) {
-                player1.addScroll(createScrollInstance(allPossibleScrolls.get(1).getClass()));
-            } else {
-                player1.addScroll(createScrollInstance(allPossibleScrolls.get(0).getClass()));
-            }
-
-            // Beri 1 scroll ke Player 2 untuk pengetesan.
-            player2.addScroll(createScrollInstance(allPossibleScrolls.get(0).getClass()));
-        }
-        // ================================================================
-        // ================= AKHIR JALAN PINTAS DEBUG =====================
-        // ================================================================
 
         startNewTurn();
     }
