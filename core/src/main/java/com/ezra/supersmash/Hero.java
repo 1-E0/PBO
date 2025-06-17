@@ -1,9 +1,6 @@
 package com.ezra.supersmash;
 
-import com.ezra.supersmash.Effects.AttackDownEffect;
-import com.ezra.supersmash.Effects.DefenseUpEffect;
-import com.ezra.supersmash.Effects.StunEffect;
-import com.ezra.supersmash.Effects.VulnerableEffect;
+import com.ezra.supersmash.Effects.*;
 import com.ezra.supersmash.Rendering.AnimationComponent;
 
 import java.util.ArrayList;
@@ -66,12 +63,16 @@ public abstract class Hero {
 
     public void takeDamage(int damage) {
         float finalDamage = damage;
-        for (StatusEffect effect : activeEffects) {
+
+        Iterator<StatusEffect> iterator = activeEffects.iterator();
+        while (iterator.hasNext()) {
+            StatusEffect effect = iterator.next();
             if (effect instanceof DefenseUpEffect) {
                 finalDamage *= (1.0f - ((DefenseUpEffect) effect).damageReduction);
             }
             if (effect instanceof VulnerableEffect) {
                 finalDamage *= ((VulnerableEffect) effect).damageMultiplier;
+                iterator.remove();
             }
         }
 
@@ -105,14 +106,39 @@ public abstract class Hero {
     }
 
     public void applyAndDecrementEffects() {
+        // --- LOGIKA BARU UNTUK MENCEGAH CONCURRENT MODIFICATION ---
+        int damageOverTime = 0;
+
         Iterator<StatusEffect> iterator = activeEffects.iterator();
         while (iterator.hasNext()) {
             StatusEffect effect = iterator.next();
-            effect.onTurnEnd(this);
+
+            if (effect instanceof VulnerableEffect) {
+                continue;
+            }
+
+            // Panggil onTurnEnd, yang mungkin akan menghitung damage (Burn/Bleed)
+            // Kita modifikasi efeknya agar mengembalikan damage, bukan langsung memanggil takeDamage().
+            // Untuk sekarang, kita akan lakukan refactoring di sini saja.
+            if (effect instanceof BurnEffect) {
+                damageOverTime += 5; // Asumsi damage Burn adalah 5
+                System.out.println(this.getName() + " takes " + 5 + " damage from being on fire!");
+            } else if (effect instanceof BleedEffect) {
+                damageOverTime += 5; // Asumsi damage Bleed adalah 5
+                System.out.println(this.getName() + " takes " + 5 + " damage from bleeding!");
+            } else {
+                effect.onTurnEnd(this);
+            }
+
             effect.decrementDuration();
             if (effect.isExpired()) {
                 iterator.remove();
             }
+        }
+
+        // Terapkan total damage dari semua efek setelah iterasi selesai.
+        if (damageOverTime > 0) {
+            this.takeDamage(damageOverTime);
         }
     }
 

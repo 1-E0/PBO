@@ -13,10 +13,13 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.ezra.supersmash.Effects.VulnerableEffect;
 import com.ezra.supersmash.Rendering.AnimationComponent;
 import com.ezra.supersmash.Rendering.HeroActor;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.function.Consumer;
 
@@ -27,7 +30,8 @@ public class BattleScreen implements Screen {
     private Texture background;
     private Player player1, player2, currentPlayer, opponent;
 
-    private Label turnLabel, logLabel;
+    private Label turnLabel, logLabel, turnCounterLabel;
+    private int turnCount;
     private Table[] p1StatusTables = new Table[3];
     private Table[] p2StatusTables = new Table[3];
     private HeroActor[] p1HeroActors = new HeroActor[3];
@@ -35,11 +39,13 @@ public class BattleScreen implements Screen {
     private TextButton attackButton, skillButton, endTurnButton;
     private ProgressBar.ProgressBarStyle progressBarStyle;
 
+    private Map<String, Texture> statusEffectIcons;
+
 
     private enum BattleState { AWAITING_INPUT, PROCESSING }
     private BattleState currentState;
     private Consumer<Hero> onTargetSelected;
-    private boolean actionWasTaken = false; // <-- PENANDA AKSI DITAMBAHKAN
+    private boolean actionWasTaken = false;
 
     public BattleScreen(Main game, Player player1, Player player2) {
         this.game = game;
@@ -52,8 +58,25 @@ public class BattleScreen implements Screen {
 
         progressBarStyle = skin.get("default-horizontal", ProgressBar.ProgressBarStyle.class);
 
+        statusEffectIcons = new HashMap<>();
+        loadStatusEffectIcons();
+
         setupUI();
         startNewGame();
+    }
+
+    private void loadStatusEffectIcons() {
+        try {
+            statusEffectIcons.put("Burn", new Texture("icons/burning.png"));
+            statusEffectIcons.put("Bleed", new Texture("icons/bleeding.png"));
+            statusEffectIcons.put("Stunned", new Texture("icons/Stun.png"));
+            statusEffectIcons.put("Vulnerable", new Texture("icons/Vulnerable.png"));
+            statusEffectIcons.put("Defense Up", new Texture("icons/defenseup.png"));
+            statusEffectIcons.put("Attack Down", new Texture("icons/attackdown.png"));
+        } catch (Exception e) {
+            System.err.println("Gagal memuat ikon status effect. Pastikan file gambar ada di folder 'assets/icons/'.");
+            e.printStackTrace();
+        }
     }
 
     private void setupUI() {
@@ -87,8 +110,9 @@ public class BattleScreen implements Screen {
         float statusBoxWidth = 160f;
         float statusBoxHeight = 100f;
 
-        float horizontalOffsetP1Status = 120f;
-        float horizontalOffsetP2Status = 150f;
+        // --- NILAI OFFSET DIUBAH DI SINI ---
+        float horizontalOffsetP1Status = 160f; // Digeser dari 120f
+        float horizontalOffsetP2Status = 180f; // Digeser dari 150f
 
         for (int i = 0; i < 3; i++) {
             float charHeight = baseCharHeight * scales[i];
@@ -128,16 +152,29 @@ public class BattleScreen implements Screen {
             addHeroClickListener(p2HeroActors[i]);
         }
 
-        Table topUiPanel = new Table();
-        topUiPanel.setBackground(skin.newDrawable("white", new Color(0, 0, 0, 0.5f)));
+        Stack topUiStack = new Stack();
+
+        Table topLeftContainer = new Table();
+        topLeftContainer.top().left();
+        turnCounterLabel = new Label("", skin, "window");
+        turnCounterLabel.setFontScale(1.5f);
+        topLeftContainer.add(turnCounterLabel).pad(20f);
+
+        Table topCenterContainer = new Table();
+        topCenterContainer.top();
+        topCenterContainer.setBackground(skin.newDrawable("white", new Color(0, 0, 0, 0.5f)));
         turnLabel = new Label("", skin, "highlighted");
         turnLabel.setFontScale(1.2f);
         logLabel = new Label("", skin, "highlighted");
         logLabel.setWrap(true);
         logLabel.setAlignment(Align.center);
-        topUiPanel.add(turnLabel).pad(10).row();
-        topUiPanel.add(logLabel).width(screenWidth * 0.4f).row();
-        root.add(topUiPanel).expand().top().padTop(screenHeight * 0.05f).row();
+        topCenterContainer.add(turnLabel).pad(10).row();
+        topCenterContainer.add(logLabel).width(screenWidth * 0.4f).row();
+
+        topUiStack.add(topCenterContainer);
+        topUiStack.add(topLeftContainer);
+
+        root.add(topUiStack).expandX().fillX().top().row();
 
         Table actionTable = new Table();
         actionTable.setBackground(skin.newDrawable("white", new Color(0, 0, 0, 0.5f)));
@@ -183,11 +220,25 @@ public class BattleScreen implements Screen {
         List<StatusEffect> effects = hero.getActiveEffects();
         if (!effects.isEmpty()) {
             Table effectsTable = new Table();
+            effectsTable.left();
             for (StatusEffect effect : effects) {
-                Label effectLabel = new Label(effect.getName() + " (" + effect.getDuration() + ")", skin);
+                Texture iconTexture = statusEffectIcons.get(effect.getName());
+                if (iconTexture != null) {
+                    Image iconImage = new Image(iconTexture);
+                    effectsTable.add(iconImage).size(16, 16).padRight(3);
+                }
+
+                String labelText;
+                if (effect instanceof VulnerableEffect) {
+                    labelText = effect.getName();
+                } else {
+                    labelText = effect.getName() + " (" + effect.getDuration() + ")";
+                }
+
+                Label effectLabel = new Label(labelText, skin);
                 effectLabel.setFontScale(0.8f);
                 effectLabel.setColor(Color.ORANGE);
-                effectsTable.add(effectLabel).padRight(5);
+                effectsTable.add(effectLabel).padRight(8);
             }
             box.add(effectsTable).left().padTop(5).row();
         }
@@ -252,7 +303,7 @@ public class BattleScreen implements Screen {
     private void executeAction(Hero attacker, Hero target, Runnable actionLogic) {
         currentState = BattleState.PROCESSING;
         onTargetSelected = null;
-        actionWasTaken = true; // <-- SET PENANDA KETIKA AKSI DILAKUKAN
+        actionWasTaken = true;
 
         attacker.animationComponent.setState(AnimationComponent.HeroState.ATTACKING);
         actionLogic.run();
@@ -284,6 +335,7 @@ public class BattleScreen implements Screen {
     }
 
     private void startNewGame() {
+        turnCount = 1;
         currentPlayer = player1;
         opponent = player2;
         startNewTurn();
@@ -292,7 +344,7 @@ public class BattleScreen implements Screen {
     private void startNewTurn() {
         currentState = BattleState.PROCESSING;
         onTargetSelected = null;
-        actionWasTaken = false; // <-- RESET PENANDA DI AWAL GILIRAN
+        actionWasTaken = false;
 
         for (Hero hero : currentPlayer.getHeroRoster()) {
             if (hero.isAlive()) {
@@ -306,20 +358,33 @@ public class BattleScreen implements Screen {
     }
 
     private void endTurn() {
-        if(checkForDefeatedHero()) return;
+        if (currentState == BattleState.PROCESSING && !actionWasTaken) return;
+        currentState = BattleState.PROCESSING;
 
-        // EFEK DIPROSES HANYA JIKA ADA AKSI YANG DIAMBIL
-        if (actionWasTaken && currentPlayer.getActiveHero() != null) {
-            currentPlayer.getActiveHero().applyAndDecrementEffects();
+        if (checkForDefeatedHero()) return;
+
+        for (Hero hero : currentPlayer.getHeroRoster()) {
+            if (hero.isAlive()) {
+                hero.applyAndDecrementEffects();
+            }
         }
 
-        if(checkForDefeatedHero()) return;
+        if (checkForDefeatedHero()) return;
 
         Player temp = currentPlayer;
         currentPlayer = opponent;
         opponent = temp;
 
-        startNewTurn();
+        if (currentPlayer == player1) {
+            turnCount++;
+        }
+
+        Timer.schedule(new Timer.Task() {
+            @Override
+            public void run() {
+                startNewTurn();
+            }
+        }, 0.5f);
     }
 
     private boolean checkForDefeatedHero() {
@@ -337,6 +402,7 @@ public class BattleScreen implements Screen {
 
     private void updateUI() {
         turnLabel.setText(currentPlayer.getName() + "'s Turn");
+        turnCounterLabel.setText("Turn: " + turnCount);
 
         for(int i = 0; i < 3; i++) {
             Hero p1Hero = player1.getHeroRoster().get(i);
@@ -359,5 +425,12 @@ public class BattleScreen implements Screen {
     @Override public void pause() {}
     @Override public void resume() {}
     @Override public void hide() {}
-    @Override public void dispose() { stage.dispose(); background.dispose(); skin.dispose(); }
+    @Override public void dispose() {
+        stage.dispose();
+        background.dispose();
+        skin.dispose();
+        for (Texture texture : statusEffectIcons.values()) {
+            texture.dispose();
+        }
+    }
 }

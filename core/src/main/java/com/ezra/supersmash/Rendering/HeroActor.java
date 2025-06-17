@@ -3,9 +3,9 @@ package com.ezra.supersmash.Rendering;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.ezra.supersmash.Hero;
 
-// HeroActor sekarang kembali menjadi Actor biasa.
 public class HeroActor extends Actor {
     private final Hero hero;
     private final boolean flipX;
@@ -22,24 +22,44 @@ public class HeroActor extends Actor {
     @Override
     public void act(float delta) {
         super.act(delta);
-        // Tetap update animasi untuk hero
         hero.animationComponent.update(delta);
     }
 
     @Override
     public void draw(Batch batch, float parentAlpha) {
-        if (hero == null || !hero.isAlive()) return; // Jangan gambar jika hero sudah mati
+        if (hero == null) return;
 
         TextureRegion currentFrame = hero.animationComponent.getFrame();
 
-        // Flip tekstur jika diperlukan (untuk Player 2)
         if (flipX && !currentFrame.isFlipX()) {
             currentFrame.flip(true, false);
         } else if (!flipX && currentFrame.isFlipX()) {
-            currentFrame.flip(true, false); // Kembalikan jika tidak perlu di-flip
+            currentFrame.flip(true, false);
         }
 
-        // Gambar animasi hero
         batch.draw(currentFrame, getX(), getY(), getWidth(), getHeight());
+    }
+
+    /**
+     * Mendefinisikan ulang area klik (hitbox) agar lebih presisi.
+     * Metode ini akan membuat area klik hanya 70% dari tinggi gambar, dihitung dari bawah,
+     * untuk menghindari tumpang tindih dengan hero lain.
+     */
+    @Override
+    public Actor hit(float x, float y, boolean touchable) {
+        // Aktor yang di-disable tidak bisa di-klik.
+        if (touchable && getTouchable() != Touchable.enabled) return null;
+
+        // Definisikan tinggi hitbox kustom (misalnya, 70% dari tinggi total).
+        float hitboxHeight = getHeight() * 0.7f;
+
+        // Periksa apakah koordinat klik (x, y) berada di dalam hitbox kustom kita.
+        // x berada di antara 0 dan lebar total.
+        // y berada di antara 0 dan tinggi hitbox yang sudah dikurangi.
+        if (x >= 0 && x < getWidth() && y >= 0 && y < hitboxHeight) {
+            return this; // Klik valid!
+        }
+
+        return null; // Klik di luar hitbox kustom.
     }
 }
