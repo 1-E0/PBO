@@ -1,4 +1,3 @@
-// PASTE KODE INI UNTUK MENGGANTIKAN SELURUH ISI FILE BattleScreen.java
 package com.ezra.supersmash;
 
 import com.badlogic.gdx.Gdx;
@@ -23,8 +22,6 @@ import com.ezra.supersmash.Rendering.HeroActor;
 import com.ezra.supersmash.Rendering.ScrollActor;
 import com.ezra.supersmash.Scrolls.ScrollOfHealing;
 import com.ezra.supersmash.Scrolls.ScrollOfStunning;
-// Pastikan Anda sudah membuat setidaknya satu kelas Scroll, contoh:
-// import com.ezra.supersmash.Scrolls.ScrollOfHealing;
 
 import java.util.*;
 import java.util.List;
@@ -47,11 +44,13 @@ public class BattleScreen implements Screen {
     private ProgressBar.ProgressBarStyle progressBarStyle;
     private Map<String, Texture> statusEffectIcons;
 
-    // --- VARIABEL UNTUK SISTEM SCROLL ---
     private Table p1ScrollContainer, p2ScrollContainer;
     private List<Scroll> allPossibleScrolls;
     private boolean scrollWasUsedThisTurn = false;
-    // ------------------------------------
+
+    // Aktor untuk Tooltip Manual
+    private Table manualTooltip;
+    private Label manualTooltipLabel;
 
     private enum BattleState { AWAITING_INPUT, PROCESSING }
     private BattleState currentState;
@@ -71,19 +70,63 @@ public class BattleScreen implements Screen {
         statusEffectIcons = new HashMap<>();
 
         loadStatusEffectIcons();
-        initializeScrolls(); // Inisialisasi daftar scroll
+        initializeScrolls();
         setupUI();
         startNewGame();
     }
 
-    // Metode untuk menampilkan pesan di log terpusat
+    // Metode untuk menampilkan tooltip manual
+    public void showManualTooltip(Scroll scroll, float screenX, float screenY) {
+        manualTooltipLabel.setText(scroll.getDescription());
+        manualTooltip.pack();
+
+        float tooltipX = screenX + 15f;
+        float tooltipY = screenY - 10f - manualTooltip.getHeight();
+
+        if (tooltipX + manualTooltip.getWidth() > stage.getWidth()) {
+            tooltipX = screenX - 15f - manualTooltip.getWidth();
+        }
+        if (tooltipY < 0) {
+            tooltipY = screenY + 15f;
+        }
+
+        manualTooltip.setPosition(tooltipX, tooltipY);
+        manualTooltip.setVisible(true);
+    }
+
+    // Metode untuk menyembunyikan tooltip manual
+    public void hideManualTooltip() {
+        manualTooltip.setVisible(false);
+    }
+
+    // Metode yang error karena tidak ada
+    public void useScroll(Scroll scroll) {
+        if (currentState != BattleState.AWAITING_INPUT || actionWasTaken || scrollWasUsedThisTurn) {
+            log("You cannot use a scroll right now.");
+            return;
+        }
+
+        currentState = BattleState.PROCESSING;
+        scrollWasUsedThisTurn = true;
+        actionWasTaken = true;
+
+        scroll.activate(currentPlayer, opponent, this);
+        currentPlayer.removeScroll(scroll);
+
+        Timer.schedule(new Timer.Task() {
+            @Override
+            public void run() {
+                endTurn();
+            }
+        }, 1.5f);
+    }
+
     public void log(String message) {
         logLabel.setText(message);
     }
 
     private void initializeScrolls() {
         allPossibleScrolls = new ArrayList<>();
-
         allPossibleScrolls.add(new ScrollOfHealing());
         allPossibleScrolls.add(new ScrollOfStunning());
     }
@@ -104,11 +147,17 @@ public class BattleScreen implements Screen {
 
     private void setupUI() {
         stage.clear();
-        Table root = new Table();
-        root.setFillParent(true);
-        stage.addActor(root);
 
-        // ... (Kode setup hero tetap sama) ...
+        Stack uiStack = new Stack();
+        uiStack.setFillParent(true);
+        stage.addActor(uiStack);
+
+        Image bgImage = new Image(background);
+        uiStack.add(bgImage);
+
+        Table root = new Table();
+        uiStack.add(root);
+
         float screenWidth = Gdx.graphics.getWidth();
         float screenHeight = Gdx.graphics.getHeight();
         float yTop = screenHeight * 0.55f;
@@ -174,21 +223,17 @@ public class BattleScreen implements Screen {
             addHeroClickListener(p2HeroActors[i]);
         }
 
-        // --- SETUP UI UNTUK SCROLL ---
         p1ScrollContainer = new Table();
-// Posisikan tabel di tepi kiri dan buat tingginya sama dengan tinggi layar
         p1ScrollContainer.setPosition(50f, 0);
         p1ScrollContainer.setHeight(Gdx.graphics.getHeight());
-        p1ScrollContainer.center(); // Pusatkan semua konten di dalam tabel secara vertikal
+        p1ScrollContainer.center();
         stage.addActor(p1ScrollContainer);
 
         p2ScrollContainer = new Table();
-// Posisikan tabel di tepi kanan (lebar layar - lebar scroll - padding)
         p2ScrollContainer.setPosition(Gdx.graphics.getWidth() - 50f , 0);
         p2ScrollContainer.setHeight(Gdx.graphics.getHeight());
-        p2ScrollContainer.center(); // Pusatkan semua konten di dalam tabel secara vertikal
+        p2ScrollContainer.center();
         stage.addActor(p2ScrollContainer);
-        // -----------------------------
 
         Stack topUiStack = new Stack();
         Table topLeftContainer = new Table();
@@ -221,6 +266,14 @@ public class BattleScreen implements Screen {
         addActionListeners();
         root.add(new Table()).expandY().row();
         root.add(actionTable).padBottom(10).bottom();
+
+        manualTooltip = new Table(skin);
+        manualTooltip.setBackground(skin.newDrawable("list", new Color(0.1f, 0.1f, 0.1f, 0.9f)));
+        manualTooltipLabel = new Label("", skin, "default");
+        manualTooltipLabel.setWrap(true);
+        manualTooltip.add(manualTooltipLabel).width(180).pad(8f);
+        manualTooltip.setVisible(false);
+        stage.addActor(manualTooltip);
     }
 
     private void populateStatusBox(Table box, Hero hero) {
@@ -312,7 +365,7 @@ public class BattleScreen implements Screen {
         });
     }
 
-    // --- METODE-METODE BARU UNTUK SCROLL ---
+    // Metode yang error karena tidak ada
     private void awardScrolls() {
         if (allPossibleScrolls.isEmpty()) {
             System.err.println("WARNING: Daftar 'allPossibleScrolls' kosong. Tidak ada scroll yang bisa diberikan.");
@@ -326,15 +379,13 @@ public class BattleScreen implements Screen {
             @Override
             public void run() {
                 if (player1.canAddScroll()) {
-                    Scroll newScroll = allPossibleScrolls.get(rand.nextInt(allPossibleScrolls.size()));
-                    player1.addScroll(createScrollInstance(newScroll.getClass()));
+                    player1.addScroll(createScrollInstance(allPossibleScrolls.get(rand.nextInt(allPossibleScrolls.size())).getClass()));
                 }
                 if (player2.canAddScroll()) {
-                    Scroll newScroll = allPossibleScrolls.get(rand.nextInt(allPossibleScrolls.size()));
-                    player2.addScroll(createScrollInstance(newScroll.getClass()));
+                    player2.addScroll(createScrollInstance(allPossibleScrolls.get(rand.nextInt(allPossibleScrolls.size())).getClass()));
                 }
             }
-        }, 0.5f); // Jeda sedikit untuk notifikasi
+        }, 0.5f);
     }
 
     private Scroll createScrollInstance(Class<? extends Scroll> scrollClass) {
@@ -346,27 +397,7 @@ public class BattleScreen implements Screen {
         }
     }
 
-    public void useScroll(Scroll scroll) {
-        if (currentState != BattleState.AWAITING_INPUT || actionWasTaken || scrollWasUsedThisTurn) {
-            log("You cannot use a scroll right now.");
-            return;
-        }
-
-        currentState = BattleState.PROCESSING;
-        scrollWasUsedThisTurn = true;
-        actionWasTaken = true;
-
-        scroll.activate(currentPlayer, opponent, this);
-        currentPlayer.removeScroll(scroll);
-
-        Timer.schedule(new Timer.Task() {
-            @Override
-            public void run() {
-                endTurn();
-            }
-        }, 1.5f);
-    }
-
+    // Metode yang error karena tidak ada
     private void updateScrollUI() {
         if (p1ScrollContainer == null || p2ScrollContainer == null) return;
         p1ScrollContainer.clear();
@@ -374,7 +405,6 @@ public class BattleScreen implements Screen {
 
         for (Scroll scroll : player1.getScrolls()) {
             boolean canUse = (currentPlayer == player1 && !actionWasTaken);
-            // Tambahkan 'skin' sebagai argumen ketiga
             ScrollActor actor = new ScrollActor(scroll, this, skin, canUse);
             p1ScrollContainer.add(actor).padBottom(10);
             p1ScrollContainer.row();
@@ -382,19 +412,18 @@ public class BattleScreen implements Screen {
 
         for (Scroll scroll : player2.getScrolls()) {
             boolean canUse = (currentPlayer == player2 && !actionWasTaken);
-            // Tambahkan 'skin' sebagai argumen ketiga
             ScrollActor actor = new ScrollActor(scroll, this, skin, canUse);
             p2ScrollContainer.add(actor).padBottom(10);
             p2ScrollContainer.row();
         }
     }
-    // ----------------------------------------
 
     private void addActionListeners() {
         attackButton.addListener(new ClickListener() {
             @Override public void clicked(InputEvent event, float x, float y) {
                 if (attackButton.isDisabled()) return;
                 Hero activeHero = currentPlayer.getActiveHero();
+                if (activeHero == null) { log("Please select a hero first."); return; }
                 if (activeHero.getEnergy() < 1) { log("Not enough energy!"); return; }
                 log("ATTACK: Select an enemy target.");
                 onTargetSelected = (target) -> {
@@ -411,6 +440,7 @@ public class BattleScreen implements Screen {
             @Override public void clicked(InputEvent event, float x, float y) {
                 if (skillButton.isDisabled()) return;
                 Hero activeHero = currentPlayer.getActiveHero();
+                if (activeHero == null) { log("Please select a hero first."); return; }
                 if (activeHero.getEnergy() < 3) { log("Not enough energy!"); return; }
                 log("SKILL: Select an enemy target.");
                 onTargetSelected = (target) -> {
@@ -456,16 +486,6 @@ public class BattleScreen implements Screen {
         updateUI();
         processFloatingTextQueue();
 
-        // === BAGIAN TES DIAGNOSTIK ===
-        stage.getBatch().begin();
-
-        // SECARA PAKSA ATUR WARNA MENJADI PUTIH TEPAT SEBELUM MENGGAMBAR BACKGROUND
-        stage.getBatch().setColor(Color.WHITE);
-
-        stage.getBatch().draw(background, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        stage.getBatch().end();
-        // === AKHIR BAGIAN TES ===
-
         stage.act(delta);
         stage.draw();
     }
@@ -474,10 +494,9 @@ public class BattleScreen implements Screen {
         turnCount = 1;
         currentPlayer = player1;
         opponent = player2;
-
-
         startNewTurn();
     }
+
     private void startNewTurn() {
         currentState = BattleState.PROCESSING;
         onTargetSelected = null;
@@ -511,7 +530,6 @@ public class BattleScreen implements Screen {
 
         if (currentPlayer == player1) {
             turnCount++;
-            // Beri scroll setiap 2 giliran, dimulai dari giliran ke-2
             if (turnCount > 1 && turnCount % 2 == 0) {
                 awardScrolls();
             }
@@ -594,7 +612,12 @@ public class BattleScreen implements Screen {
     }
 
     @Override public void show() {}
-    @Override public void resize(int width, int height) { stage.getViewport().update(width, height, true); setupUI(); }
+
+    @Override
+    public void resize(int width, int height) {
+        stage.getViewport().update(width, height, true);
+    }
+
     @Override public void pause() {}
     @Override public void resume() {}
     @Override public void hide() {}
@@ -606,7 +629,6 @@ public class BattleScreen implements Screen {
         for (Texture texture : statusEffectIcons.values()) {
             texture.dispose();
         }
-        // Dispose sisa scroll
         if (allPossibleScrolls != null) {
             for(Scroll s : allPossibleScrolls) s.dispose();
         }
