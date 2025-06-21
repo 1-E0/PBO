@@ -6,8 +6,11 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.ui.Stack;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
@@ -20,8 +23,8 @@ import com.ezra.supersmash.Effects.VulnerableEffect;
 import com.ezra.supersmash.Rendering.AnimationComponent;
 import com.ezra.supersmash.Rendering.HeroActor;
 import com.ezra.supersmash.Rendering.ScrollActor;
-import com.ezra.supersmash.Scrolls.ScrollOfHealing;
-import com.ezra.supersmash.Scrolls.ScrollOfStunning;
+import com.ezra.supersmash.Scrolls.*;
+
 
 import java.util.*;
 import java.util.List;
@@ -34,6 +37,7 @@ public class BattleScreen implements Screen {
     private Texture background;
     private Player player1, player2, currentPlayer, opponent;
 
+    // UI Battle
     private Label turnLabel, logLabel, turnCounterLabel;
     private int turnCount;
     private Table[] p1StatusTables = new Table[3];
@@ -43,18 +47,24 @@ public class BattleScreen implements Screen {
     private TextButton attackButton, skillButton, useScrollButton, endTurnButton;
     private ProgressBar.ProgressBarStyle progressBarStyle;
     private Map<String, Texture> statusEffectIcons;
-
     private Table p1ScrollContainer, p2ScrollContainer;
-    private List<Scroll> allPossibleScrolls;
-    private boolean scrollWasUsedThisTurn = false;
-
     private Table manualTooltip;
     private Label manualTooltipLabel;
-
-    private enum BattleState { AWAITING_INPUT, PROCESSING, SELECTING_SCROLL }
-    private BattleState currentState;
-    private Consumer<Hero> onTargetSelected;
+    private boolean scrollWasUsedThisTurn = false;
     private boolean actionWasTaken = false;
+
+    // UI & Logic Draft
+    private Table draftScrollContainer;
+    private Player draftPlayer;
+    private Player draftStarter;
+    private List<Scroll> draftableScrolls;
+    private List<Scroll> allPossibleScrolls;
+
+
+    private enum BattleState { SCROLL_DRAFT, AWAITING_INPUT, PROCESSING, SELECTING_SCROLL }
+    private BattleState currentState;
+    public Consumer<Hero> onTargetSelected;
+
 
     public BattleScreen(Main game, Player player1, Player player2) {
         this.game = game;
@@ -70,9 +80,120 @@ public class BattleScreen implements Screen {
 
         loadStatusEffectIcons();
         initializeScrolls();
-        setupUI();
-        startNewGame();
+        startScrollDraft(); // Mulai dari fase draft
     }
+
+    private void startScrollDraft() {
+        currentState = BattleState.SCROLL_DRAFT;
+        draftableScrolls = new ArrayList<>();
+        Collections.shuffle(allPossibleScrolls);
+        for (int i = 0; i < 6; i++) {
+            draftableScrolls.add(createScrollInstance(allPossibleScrolls.get(i).getClass()));
+        }
+
+        // Tentukan siapa yang mulai draft
+        draftStarter = new Random().nextBoolean() ? player1 : player2;
+        draftPlayer = draftStarter;
+
+        setupDraftUI();
+    }
+
+    private void setupDraftUI() {
+        stage.clear();
+
+        Stack uiStack = new Stack();
+        uiStack.setFillParent(true);
+        stage.addActor(uiStack);
+
+        Image bgImage = new Image(background);
+        uiStack.add(bgImage);
+
+        Table root = new Table();
+        root.setFillParent(true);
+        uiStack.add(root);
+
+        turnLabel = new Label("", skin, "highlighted");
+        turnLabel.setFontScale(1.5f);
+        root.add(turnLabel).pad(20).top().row();
+
+        draftScrollContainer = new Table();
+        for (Scroll scroll : draftableScrolls) {
+            ScrollActor actor = new ScrollActor(scroll, this, true);
+            draftScrollContainer.add(actor).pad(15);
+        }
+        root.add(draftScrollContainer).expand().row();
+
+        logLabel = new Label("A new battle begins! Choose your scrolls.", skin, "default");
+        logLabel.setFontScale(1.2f);
+        root.add(logLabel).pad(20).bottom();
+
+        // Tooltip
+        manualTooltip = new Table(skin);
+        manualTooltip.setBackground(skin.newDrawable("list", new Color(0.1f, 0.1f, 0.1f, 0.9f)));
+        manualTooltipLabel = new Label("", skin, "default");
+        manualTooltipLabel.setWrap(true);
+        manualTooltip.add(manualTooltipLabel).width(180).pad(8f);
+        manualTooltip.setVisible(false);
+        stage.addActor(manualTooltip);
+
+        updateDraftUI();
+    }
+
+    public void handleScrollDraftPick(Scroll scroll) {
+        if (currentState != BattleState.SCROLL_DRAFT || !draftableScrolls.contains(scroll)) {
+            return;
+        }
+
+        draftPlayer.addScroll(scroll);
+        draftableScrolls.remove(scroll);
+
+        // Animasikan scroll yang dipilih
+        for (Actor actor : draftScrollContainer.getChildren()) {
+            ScrollActor scrollActor = (ScrollActor) actor;
+            if (scrollActor.getScroll() == scroll) {
+                scrollActor.setTouchable(com.badlogic.gdx.scenes.scene2d.Touchable.disabled);
+                scrollActor.addAction(Actions.sequence(
+                    Actions.parallel(
+                        Actions.scaleTo(1.5f, 1.5f, 0.2f),
+                        Actions.fadeOut(0.2f)
+                    ),
+                    Actions.removeActor()
+                ));
+                break;
+            }
+        }
+
+        // Cek jika draft selesai
+        if (player1.getScrolls().size() + player2.getScrolls().size() == 6) {
+            logLabel.setText("Draft complete! Preparing for battle...");
+            Timer.schedule(new Timer.Task() {
+                @Override
+                public void run() {
+                    endScrollDraft();
+                }
+            }, 1.5f);
+        } else {
+            // Ganti giliran draft
+            draftPlayer = (draftPlayer == player1) ? player2 : player1;
+            updateDraftUI();
+        }
+    }
+
+
+    private void endScrollDraft() {
+        // Player yang pick KEDUA akan jalan PERTAMA
+        currentPlayer = (draftStarter == player1) ? player2 : player1;
+        opponent = (currentPlayer == player1) ? player2 : player1;
+
+        setupUI(); // Setup UI untuk battle
+        startNewGame(); // Mulai game
+    }
+
+    private void updateDraftUI() {
+        if (currentState != BattleState.SCROLL_DRAFT) return;
+        turnLabel.setText(draftPlayer.getName() + ": Pick a Scroll (" + (draftPlayer.getScrolls().size() + 1) + "/3)");
+    }
+
 
     public void showManualTooltip(Scroll scroll, float screenX, float screenY) {
         manualTooltipLabel.setText(scroll.getDescription());
@@ -96,18 +217,30 @@ public class BattleScreen implements Screen {
         manualTooltip.setVisible(false);
     }
 
-    public void useScroll(Scroll scroll) {
-        if (currentState != BattleState.SELECTING_SCROLL || actionWasTaken || scrollWasUsedThisTurn) {
+    public boolean isScrollUsable(Scroll scroll) {
+        if (currentPlayer.getScrolls().contains(scroll)) {
+            // Perbaikan: Izinkan penggunaan scroll jika tidak ada aksi yang diambil (kecuali scroll itu sendiri)
+            return currentState == BattleState.SELECTING_SCROLL && !scrollWasUsedThisTurn;
+        }
+        return false;
+    }
+
+
+
+    public void useScroll(Scroll scroll, Hero target) {
+        if (!isScrollUsable(scroll)) {
             return;
         }
 
         currentState = BattleState.PROCESSING;
         scrollWasUsedThisTurn = true;
-        actionWasTaken = true;
+        actionWasTaken = true; // Menggunakan scroll dihitung sebagai aksi
 
-        scroll.activate(currentPlayer, opponent, this);
-        currentPlayer.removeScroll(scroll);
+        // Panggil activate dengan target yang sudah ditentukan
+        scroll.activate(currentPlayer, opponent, target, this);
+        currentPlayer.removeScroll(scroll); // Scroll dihapus dari tangan player
 
+        // Setelah menggunakan scroll, giliran otomatis berakhir
         Timer.schedule(new Timer.Task() {
             @Override
             public void run() {
@@ -116,14 +249,20 @@ public class BattleScreen implements Screen {
         }, 1.5f);
     }
 
+
     public void log(String message) {
-        logLabel.setText(message);
+        if(logLabel != null) logLabel.setText(message);
     }
 
     private void initializeScrolls() {
         allPossibleScrolls = new ArrayList<>();
         allPossibleScrolls.add(new ScrollOfHealing());
         allPossibleScrolls.add(new ScrollOfStunning());
+        allPossibleScrolls.add(new ScrollOfFireball());
+        allPossibleScrolls.add(new ScrollOfPower());
+        allPossibleScrolls.add(new ScrollOfShielding());
+        // Tambahkan 1 lagi agar pas 6
+        allPossibleScrolls.add(new ScrollOfVulnerability()); // Asumsi ada ScrollOfVulnerability
     }
 
     private void loadStatusEffectIcons() {
@@ -135,6 +274,7 @@ public class BattleScreen implements Screen {
             statusEffectIcons.put("Defense Up", new Texture("icons/defenseup.png"));
             statusEffectIcons.put("Attack Down", new Texture("icons/attackdown.png"));
             statusEffectIcons.put("Mock", new Texture("icons/Mock.png"));
+            statusEffectIcons.put("Attack Up", new Texture("icons/defenseup.png")); // Placeholder icon
         } catch (Exception e) {
             System.err.println("Failed to load status effect icons: " + e.getMessage());
         }
@@ -151,6 +291,7 @@ public class BattleScreen implements Screen {
         uiStack.add(bgImage);
 
         Table root = new Table();
+        root.setFillParent(true);
         uiStack.add(root);
 
         float screenWidth = Gdx.graphics.getWidth();
@@ -250,38 +391,29 @@ public class BattleScreen implements Screen {
         topUiStack.add(topLeftContainer);
         root.add(topUiStack).expandX().fillX().top().row();
 
-        // --- PENYESUAIAN TAMPILAN TOMBOL AKSI ---
         Table actionTable = new Table();
-
         attackButton = new TextButton("Attack (1)", skin);
         skillButton = new TextButton("Skill (3)", skin);
         useScrollButton = new TextButton("Use Scroll", skin);
         endTurnButton = new TextButton("End Turn", skin);
-
         float buttonWidth = 150f;
         float buttonHeight = 50f;
-        float buttonSpacing = 15f; // Jarak antar tombol diperkecil
-
+        float buttonSpacing = 15f;
         actionTable.add(attackButton).width(buttonWidth).height(buttonHeight);
         actionTable.add(skillButton).width(buttonWidth).height(buttonHeight).padLeft(buttonSpacing);
         actionTable.add(useScrollButton).width(buttonWidth).height(buttonHeight).padLeft(buttonSpacing);
         actionTable.add(endTurnButton).width(buttonWidth).height(buttonHeight).padLeft(buttonSpacing);
-
-        // Atur agar setiap tombol juga sedikit transparan
-        float buttonAlpha = 0.9f; // 90% opacity
+        float buttonAlpha = 0.9f;
         attackButton.getColor().a = buttonAlpha;
         skillButton.getColor().a = buttonAlpha;
         useScrollButton.getColor().a = buttonAlpha;
         endTurnButton.getColor().a = buttonAlpha;
 
         Table bottomBar = new Table();
-        // Latar belakang panel dibuat sedikit lebih gelap untuk kontras
         bottomBar.setBackground(skin.newDrawable("white", new Color(0.1f, 0.1f, 0.1f, 0.7f)));
         bottomBar.add(actionTable).pad(10f);
-
         root.add(new Table()).expandY().row();
         root.add(bottomBar).fillX().height(buttonHeight + 20f);
-        // --- AKHIR PENYESUAIAN ---
 
         addActionListeners();
 
@@ -349,6 +481,23 @@ public class BattleScreen implements Screen {
         actor.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                // Modifikasi kondisi untuk pemilihan target scroll
+                if (currentState == BattleState.SELECTING_SCROLL) {
+                    Hero clickedHero = actor.getHero();
+                    // Jika target adalah musuh dan valid, panggil onTargetSelected
+                    if (opponent.getHeroRoster().contains(clickedHero) && clickedHero.isAlive()) {
+                        if (onTargetSelected != null) {
+                            onTargetSelected.accept(clickedHero);
+                        }
+                    } else if (currentPlayer.getHeroRoster().contains(clickedHero) && clickedHero.isAlive()) { // Untuk scroll yang menargetkan sekutu
+                        if (onTargetSelected != null) {
+                            onTargetSelected.accept(clickedHero);
+                        }
+                    }
+                    return; // Penting untuk menghentikan lebih lanjut jika dalam mode pemilihan scroll
+                }
+
+
                 if (currentState != BattleState.AWAITING_INPUT) return;
                 Hero clickedHero = actor.getHero();
                 if (currentPlayer.getHeroRoster().contains(clickedHero) && clickedHero.isAlive()) {
@@ -383,15 +532,14 @@ public class BattleScreen implements Screen {
         });
     }
 
+
     private void awardScrolls() {
         if (allPossibleScrolls.isEmpty()) {
             System.err.println("WARNING: 'allPossibleScrolls' list is empty. No scrolls can be awarded.");
             return;
         }
-
         Random rand = new Random();
         log("A new scroll has been granted to each player!");
-
         Timer.schedule(new Timer.Task() {
             @Override
             public void run() {
@@ -421,6 +569,7 @@ public class BattleScreen implements Screen {
                 Hero activeHero = currentPlayer.getActiveHero();
                 if (activeHero == null) { log("Please select a hero first."); return; }
                 if (activeHero.getEnergy() < 1) { log("Not enough energy!"); return; }
+                if (actionWasTaken) { log("You have already taken an action this turn."); return; }
                 log("Attack: Select an enemy target.");
                 onTargetSelected = (target) -> {
                     activeHero.spendEnergy(1);
@@ -438,6 +587,7 @@ public class BattleScreen implements Screen {
                 Hero activeHero = currentPlayer.getActiveHero();
                 if (activeHero == null) { log("Please select a hero first."); return; }
                 if (activeHero.getEnergy() < 3) { log("Not enough energy!"); return; }
+                if (actionWasTaken) { log("You have already taken an action this turn."); return; }
                 log("Skill: Select an enemy target.");
                 onTargetSelected = (target) -> {
                     activeHero.spendEnergy(3);
@@ -450,25 +600,31 @@ public class BattleScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 if (useScrollButton.isDisabled()) return;
+                if (scrollWasUsedThisTurn) { log("You can only use one scroll per turn."); return; }
+                if (actionWasTaken) { log("You cannot use a scroll after attacking or using a skill."); return; }
+
                 currentState = BattleState.SELECTING_SCROLL;
-                log("Select a scroll to use from the side panels.");
+                log("Select a scroll to use, then select a target.");
+                // Logika baru untuk pemilihan target scroll ada di ScrollActor touchUp
+                // Tidak perlu menyetel onTargetSelected di sini, akan disetel oleh ScrollActor
             }
         });
+
 
         endTurnButton.addListener(new ClickListener() {
             @Override public void clicked(InputEvent event, float x, float y) {
                 if (endTurnButton.isDisabled()) return;
-
                 if (currentState == BattleState.SELECTING_SCROLL) {
                     currentState = BattleState.AWAITING_INPUT;
                     log("Scroll selection cancelled.");
+                    onTargetSelected = null; // Batalkan pemilihan target
                     return;
                 }
-
                 endTurn();
             }
         });
     }
+
 
     private void executeAction(Hero attacker, Hero target, Runnable actionLogic) {
         currentState = BattleState.PROCESSING;
@@ -489,14 +645,17 @@ public class BattleScreen implements Screen {
     private float getAspectRatio(Hero hero) {
         return (float)hero.animationComponent.getFrame().getRegionWidth() / (float)hero.animationComponent.getFrame().getRegionHeight();
     }
-
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        updateUI();
-        processFloatingTextQueue();
+        if (currentState != BattleState.SCROLL_DRAFT) {
+            updateUI();
+            processFloatingTextQueue();
+        } else {
+            updateDraftUI();
+        }
 
         stage.act(delta);
         stage.draw();
@@ -504,8 +663,6 @@ public class BattleScreen implements Screen {
 
     private void startNewGame() {
         turnCount = 1;
-        currentPlayer = player1;
-        opponent = player2;
         startNewTurn();
     }
 
@@ -518,7 +675,23 @@ public class BattleScreen implements Screen {
         for (Hero hero : currentPlayer.getHeroRoster()) {
             if (hero.isAlive()) hero.gainEnergy(1);
         }
+        int firstAvailableHeroIndex = -1;
+        for (int i = 0; i < currentPlayer.getHeroRoster().size(); i++) {
+            Hero hero = currentPlayer.getHeroRoster().get(i);
+            if (hero.isAlive() && !hero.isStunned()) {
+                firstAvailableHeroIndex = i;
+                break;
+            }
+        }
 
+        if (firstAvailableHeroIndex != -1) {
+            currentPlayer.setActiveHero(firstAvailableHeroIndex);
+            log(currentPlayer.getName() + "'s Turn. " + currentPlayer.getActiveHero().getName() + " is active.");
+        } else {
+            // Jika tidak ada hero yang bisa beraksi (semua stun atau kalah)
+            currentPlayer.setActiveHero(-1);
+            log(currentPlayer.getName() + "'s Turn. No available heroes to act.");
+        }
         currentPlayer.setActiveHero(-1);
         log(currentPlayer.getName() + "'s Turn. Select your character.");
     }
@@ -529,9 +702,14 @@ public class BattleScreen implements Screen {
 
         if (checkForDefeatedHero()) return;
 
+        // Terapkan efek DOT/HOT dan decrement durasi di akhir giliran player saat ini
         for (Hero hero : currentPlayer.getHeroRoster()) {
             if (hero.isAlive()) hero.applyAndDecrementEffects();
         }
+        for (Hero hero : opponent.getHeroRoster()) {
+            if (hero.isAlive()) hero.applyAndDecrementEffects();
+        }
+
 
         if (checkForDefeatedHero()) return;
 
@@ -541,7 +719,7 @@ public class BattleScreen implements Screen {
 
         if (currentPlayer == player1) {
             turnCount++;
-            if (turnCount > 1 && turnCount % 2 == 0) {
+            if (turnCount > 1 && turnCount % 2 != 0) { // Award setiap awal giliran ganjil (setelah P2 selesai)
                 awardScrolls();
             }
         }
@@ -571,18 +749,25 @@ public class BattleScreen implements Screen {
         p1ScrollContainer.clear();
         p2ScrollContainer.clear();
 
-        boolean scrollsAreClickable = (currentState == BattleState.SELECTING_SCROLL);
+        float screenWidth = Gdx.graphics.getWidth(); // Dapatkan lebar jendela saat ini
+        float screenHeight = Gdx.graphics.getHeight();
+
+        float scrollHeight = screenHeight * 0.18f; // Sesuaikan persentase ini sesuai keinginan
+        float scrollWidth = scrollHeight * (80f / 110f);
+
 
         for (Scroll scroll : player1.getScrolls()) {
-            boolean canUse = (currentPlayer == player1 && scrollsAreClickable);
-            ScrollActor actor = new ScrollActor(scroll, this, skin, canUse);
+            ScrollActor actor = new ScrollActor(scroll, this, false);
+            actor.setSize(160, 220);
+            actor.setSize(scrollWidth, scrollHeight);
             p1ScrollContainer.add(actor).padBottom(10);
             p1ScrollContainer.row();
         }
 
         for (Scroll scroll : player2.getScrolls()) {
-            boolean canUse = (currentPlayer == player2 && scrollsAreClickable);
-            ScrollActor actor = new ScrollActor(scroll, this, skin, canUse);
+            ScrollActor actor = new ScrollActor(scroll, this, false);
+            actor.setSize(160, 220);
+            actor.setSize(scrollWidth, scrollHeight);
             p2ScrollContainer.add(actor).padBottom(10);
             p2ScrollContainer.row();
         }
@@ -596,9 +781,27 @@ public class BattleScreen implements Screen {
             Hero p1Hero = player1.getHeroRoster().get(i);
             populateStatusBox(p1StatusTables[i], p1Hero);
             p1StatusTables[i].setColor(player1.getActiveHero() == p1Hero ? Color.GOLD : Color.WHITE);
+            // Perbaikan: Highlight hero musuh saat memilih target scroll
+            if (currentState == BattleState.SELECTING_SCROLL && opponent.getHeroRoster().contains(p1Hero) && p1Hero.isAlive()) {
+                p1StatusTables[i].setColor(Color.RED); // Warna highlight untuk target musuh
+            }
+            if (currentState == BattleState.SELECTING_SCROLL && currentPlayer.getHeroRoster().contains(p1Hero) && p1Hero.isAlive()) {
+                // Jika scroll menargetkan sekutu, highlight sekutu juga
+                p1StatusTables[i].setColor(Color.BLUE); // Warna highlight untuk target sekutu
+            }
+
+
             Hero p2Hero = player2.getHeroRoster().get(i);
             populateStatusBox(p2StatusTables[i], p2Hero);
             p2StatusTables[i].setColor(player2.getActiveHero() == p2Hero ? Color.GOLD : Color.WHITE);
+            // Perbaikan: Highlight hero musuh saat memilih target scroll
+            if (currentState == BattleState.SELECTING_SCROLL && opponent.getHeroRoster().contains(p2Hero) && p2Hero.isAlive()) {
+                p2StatusTables[i].setColor(Color.RED); // Warna highlight untuk target musuh
+            }
+            if (currentState == BattleState.SELECTING_SCROLL && currentPlayer.getHeroRoster().contains(p2Hero) && p2Hero.isAlive()) {
+                // Jika scroll menargetkan sekutu, highlight sekutu juga
+                p2StatusTables[i].setColor(Color.BLUE); // Warna highlight untuk target sekutu
+            }
         }
 
         updateScrollUI();
@@ -607,16 +810,22 @@ public class BattleScreen implements Screen {
         boolean heroSelected = currentPlayer.getActiveHero() != null;
         boolean hasScrolls = !currentPlayer.getScrolls().isEmpty();
 
-        attackButton.setDisabled(!(isAwaitingInput && heroSelected));
-        skillButton.setDisabled(!(isAwaitingInput && heroSelected));
-        useScrollButton.setDisabled(!(isAwaitingInput && hasScrolls));
+        // Mengatur disabled state tombol
+        attackButton.setDisabled(!(isAwaitingInput && heroSelected && !actionWasTaken));
+        skillButton.setDisabled(!(isAwaitingInput && heroSelected && !actionWasTaken));
+        // Perbaikan: useScrollButton harus dapat diakses jika sedang SELECTING_SCROLL dan belum menggunakan scroll
+        useScrollButton.setDisabled(!(isAwaitingInput && hasScrolls && !scrollWasUsedThisTurn && !actionWasTaken) && currentState != BattleState.SELECTING_SCROLL);
+        endTurnButton.setDisabled(!isAwaitingInput && currentState != BattleState.SELECTING_SCROLL); // Perbaikan: Tombol End Turn/Cancel harus aktif saat SELECTING_SCROLL
+
 
         if (currentState == BattleState.SELECTING_SCROLL) {
             endTurnButton.setText("Cancel");
+            endTurnButton.setDisabled(false);
         } else {
             endTurnButton.setText("End Turn");
         }
     }
+
 
     private void processFloatingTextQueue() {
         if (!Hero.damageQueue.isEmpty()) {
@@ -657,14 +866,12 @@ public class BattleScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
-        // Perbarui viewport stage agar sistem koordinatnya sesuai dengan ukuran jendela yang baru.
         stage.getViewport().update(width, height, true);
-
-        // Panggil ulang setupUI() untuk membangun kembali seluruh tata letak.
-        // Ini akan menghapus UI lama dan membuat ulang semuanya berdasarkan
-        // ukuran lebar dan tinggi yang baru, sehingga posisi hero dan status box
-        // akan selalu benar.
-        setupUI();
+        if(currentState == BattleState.SCROLL_DRAFT){
+            setupDraftUI();
+        } else {
+            setupUI(); // Memanggil setupUI untuk mengatur ulang UI setelah resize
+        }
     }
 
     @Override public void pause() {}
@@ -673,19 +880,28 @@ public class BattleScreen implements Screen {
 
     @Override public void dispose() {
         stage.dispose();
-        background.dispose();
-        skin.dispose();
-        for (Texture texture : statusEffectIcons.values()) {
-            texture.dispose();
+        if (background != null) background.dispose();
+        if (skin != null) skin.dispose();
+
+        if (statusEffectIcons != null) {
+            for (Texture texture : statusEffectIcons.values()) {
+                if (texture != null) texture.dispose();
+            }
         }
+
+        // Dispose scrolls from all lists to prevent memory leaks
         if (allPossibleScrolls != null) {
             for(Scroll s : allPossibleScrolls) s.dispose();
         }
-        if (player1 != null) {
+        if(draftableScrolls != null) {
+            for(Scroll s : draftableScrolls) s.dispose();
+        }
+        if (player1 != null && player1.getScrolls() != null) {
             for(Scroll s : player1.getScrolls()) s.dispose();
         }
-        if (player2 != null) {
+        if (player2 != null && player2.getScrolls() != null) {
             for(Scroll s : player2.getScrolls()) s.dispose();
         }
     }
 }
+

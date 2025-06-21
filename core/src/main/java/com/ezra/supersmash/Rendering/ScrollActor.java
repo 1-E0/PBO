@@ -13,53 +13,70 @@ import com.ezra.supersmash.Scroll;
 public class ScrollActor extends Actor {
     private final Scroll scroll;
     private final BattleScreen battleScreen;
-    private final boolean canUse;
+    private final boolean isForDraft; // Flag untuk membedakan fase
 
-    public ScrollActor(Scroll scroll, BattleScreen battleScreen, Skin skin, boolean canUse) {
+    public ScrollActor(Scroll scroll, BattleScreen battleScreen, boolean isForDraft) {
         this.scroll = scroll;
         this.battleScreen = battleScreen;
-        this.canUse = canUse;
+        this.isForDraft = isForDraft;
 
-        setSize(80, 110);
+        setSize(240, 330);
         setOrigin(Align.center);
 
         addListener(new ClickListener() {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
-                if (canUse) {
+                // Efek hover hanya jika bisa di-klik
+                if (isForDraft || battleScreen.isScrollUsable(scroll)) {
                     clearActions();
-                    addAction(Actions.scaleTo(2.2f, 2.2f, 0.15f));
+                    addAction(Actions.scaleTo(1.5f, 1.5f, 0.15f));
                 }
-                battleScreen.showManualTooltip(scroll, event.getStageX(), event.getStageY());
+                if (!isForDraft) {
+                    battleScreen.showManualTooltip(scroll, event.getStageX(), event.getStageY());
+                }
             }
 
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
-                if (canUse) {
+                if (isForDraft || battleScreen.isScrollUsable(scroll)) {
                     clearActions();
-                    addAction(Actions.scaleTo(1.0f, 1.0f, 0.15f));
+                    addAction(Actions.scaleTo(1f, 1f, 0.15f));
                 }
                 battleScreen.hideManualTooltip();
             }
 
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                // Hanya proses klik jika 'canUse' bernilai true
-                return canUse;
+                if (isForDraft) {
+                    return true;
+                }
+                return battleScreen.isScrollUsable(scroll);
             }
 
             @Override
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
-                // Logika penggunaan scroll dipindahkan ke sini
                 battleScreen.hideManualTooltip();
-                battleScreen.useScroll(scroll);
+                if (isForDraft) {
+                    battleScreen.handleScrollDraftPick(scroll);
+                } else {
+                    // MODIFIKASI BARU
+                    battleScreen.log("Select a target for " + scroll.getName());
+                    battleScreen.onTargetSelected = (target) -> {
+                        battleScreen.useScroll(scroll, target);
+                    };
+                }
             }
         });
     }
 
     @Override
     public void draw(Batch batch, float parentAlpha) {
+        batch.setColor(getColor()); // Terapkan warna aktor (misal untuk fade out)
         batch.draw(scroll.getTexture(), getX(), getY(), getOriginX(), getOriginY(),
             getWidth(), getHeight(), getScaleX(), getScaleY(), getRotation());
+    }
+
+    public Scroll getScroll() {
+        return scroll;
     }
 }

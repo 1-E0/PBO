@@ -2,6 +2,8 @@ package com.ezra.supersmash;
 
 import com.ezra.supersmash.Effects.*;
 import com.ezra.supersmash.Rendering.AnimationComponent;
+import com.ezra.supersmash.Effects.AttackUpEffect;
+
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -51,12 +53,19 @@ public abstract class Hero {
 
     protected int calculateDamage(int baseDamage, boolean isCritical) {
         float finalDamage = baseDamage;
-        // Terapkan modifikasi dari status Attack Down
+
+        // Terapkan modifikasi dari status
         for (StatusEffect effect : this.activeEffects) {
             if (effect instanceof AttackDownEffect) {
                 finalDamage *= (1.0f - ((AttackDownEffect) effect).attackReduction);
             }
+            // --- TAMBAHAN ---
+            if (effect instanceof AttackUpEffect) {
+                finalDamage *= (1.0f + ((AttackUpEffect) effect).attackBonus);
+            }
+            // --- AKHIR TAMBAHAN ---
         }
+
         // Terapkan damage critical
         if (isCritical) {
             finalDamage *= CRIT_MULTIPLIER;
