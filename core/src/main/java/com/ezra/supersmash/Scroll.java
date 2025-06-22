@@ -18,7 +18,7 @@ public abstract class Scroll {
     // Metode ini akan dipanggil saat scroll digunakan
     // 'user' adalah pemain yang menggunakan scroll, 'screen' adalah instance BattleScreen
     // 'target' adalah hero spesifik yang menjadi sasaran scroll
-    public abstract void activate(Player user, Player opponent, Hero target, BattleScreen screen);
+    public abstract boolean activate(Player user, Player opponent, Hero target, BattleScreen screen);
 
     public String getName() {
         return name;

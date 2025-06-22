@@ -1,5 +1,7 @@
 package com.ezra.supersmash.Heroes;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.ezra.supersmash.Hero;
@@ -10,8 +12,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Assassin extends Hero {
+    private Sound dag;
     public Assassin() {
         super("Assassin", 70, new ShadowStrike(), createAssassinAnimations());
+        dag = Gdx.audio.newSound(Gdx.files.internal("sounds/dagger.mp3"));
     }
 
     private static AnimationComponent createAssassinAnimations() {
@@ -29,6 +33,7 @@ public class Assassin extends Hero {
 
     @Override
     public void basicAttack(Hero target) {
+        dag.play(0.1f);
         System.out.println(name + " slashes swiftly!");
         dealDamage(target, 25); // Gunakan metode publik yang diwariskan
     }

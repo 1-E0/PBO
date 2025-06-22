@@ -2,10 +2,13 @@ package com.ezra.supersmash;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -20,9 +23,11 @@ import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.ezra.supersmash.Effects.MockEffect;
 import com.ezra.supersmash.Effects.VulnerableEffect;
+import com.ezra.supersmash.Heroes.*;
 import com.ezra.supersmash.Rendering.AnimationComponent;
 import com.ezra.supersmash.Rendering.HeroActor;
 import com.ezra.supersmash.Rendering.ScrollActor;
+import com.ezra.supersmash.Rendering.VisualEffectActor;
 import com.ezra.supersmash.Scrolls.*;
 
 
@@ -36,6 +41,7 @@ public class BattleScreen implements Screen {
     private Skin skin;
     private Texture background;
     private Player player1, player2, currentPlayer, opponent;
+    private Sound crit;
 
     // UI Battle
     private Label turnLabel, logLabel, turnCounterLabel;
@@ -74,6 +80,7 @@ public class BattleScreen implements Screen {
         Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("ui/uiskin.json"));
         background = new Texture(Gdx.files.internal(new String[]{"backgrounds/game_background_1.png", "backgrounds/game_background_2.png", "backgrounds/game_background_3.png", "backgrounds/game_background_4.png"}[new Random().nextInt(4)]));
+        crit = Gdx.audio.newSound(Gdx.files.internal("sounds/crit.mp3"));
 
         progressBarStyle = skin.get("default-horizontal", ProgressBar.ProgressBarStyle.class);
         statusEffectIcons = new HashMap<>();
@@ -81,6 +88,106 @@ public class BattleScreen implements Screen {
         loadStatusEffectIcons();
         initializeScrolls();
         startScrollDraft(); // Mulai dari fase draft
+    }
+
+    public void playEffectAnimation(Hero targetHero, String animationPath, int frameCols, int frameRows, int rowIndex, float frameDuration) {
+        HeroActor targetActor = null;
+        // Cari Actor yang sesuai dengan Hero target
+        for (HeroActor actor : p1HeroActors) {
+            if (actor.getHero() == targetHero) {
+                targetActor = actor;
+                break;
+            }
+        }
+        if (targetActor == null) {
+            for (HeroActor actor : p2HeroActors) {
+                if (actor.getHero() == targetHero) {
+                    targetActor = actor;
+                    break;
+                }
+            }
+        }
+
+        if (targetActor != null) {
+            // Buat animasi dari file yang diberikan
+            Animation<TextureRegion> effectAnimation = VisualEffectActor.createEffectAnimation(animationPath, frameCols, frameRows, rowIndex, frameDuration);
+            VisualEffectActor effectActor = new VisualEffectActor(effectAnimation);
+
+            // Atur ukuran dan posisi efek agar berada di tengah Hero
+            float effectScale = 2.0f; // Anda bisa sesuaikan skala efek di sini
+            effectActor.setSize(effectActor.getWidth() * effectScale, effectActor.getHeight() * effectScale);
+            float effectX = targetActor.getX() + (targetActor.getWidth() / 2) - (effectActor.getWidth() / 2);
+            float effectY = targetActor.getY() + (targetActor.getHeight() / 2) - (effectActor.getHeight() / 2);
+
+            // =================================================================
+            // ---            BLOK KUSTOMISASI POSISI EFEK                 ---
+            // Anda bisa menambahkan logika custom untuk setiap hero di sini.
+            // =================================================================
+            if (targetHero instanceof Warrior) {
+                if (player1.getHeroRoster().contains(targetHero)) { // Jika Warrior milik Player 1
+                    effectY -= 40; // Contoh: geser efek sedikit ke atas
+                    effectX -= 40; // Contoh: geser efek sedikit ke kiri
+                } else { // Jika Warrior milik Player 2
+                    effectY -= 40;
+                    effectX += 40;
+                }
+            }
+
+            if (targetHero instanceof Mage) {
+                if (player1.getHeroRoster().contains(targetHero)) { // Jika Warrior milik Player 1
+                    effectY -= 30; // Contoh: geser efek sedikit ke atas
+                    effectX -= 20; // Contoh: geser efek sedikit ke kiri
+                } else { // Jika Warrior milik Player 2
+                    effectY -= 30;
+                    effectX += 20;
+                }
+            }
+
+            if (targetHero instanceof Archer) {
+                if (player1.getHeroRoster().contains(targetHero)) { // Jika Warrior milik Player 1
+                    effectY -= 30; // Contoh: geser efek sedikit ke atas
+                    effectX -= 0; // Contoh: geser efek sedikit ke kiri
+                } else { // Jika Warrior milik Player 2
+                    effectY -= 30;
+                    effectX += 0;
+                }
+            }
+
+            if (targetHero instanceof Assassin) {
+                if (player1.getHeroRoster().contains(targetHero)) { // Jika Warrior milik Player 1
+                    effectY -= 40; // Contoh: geser efek sedikit ke atas
+                    effectX -= 5; // Contoh: geser efek sedikit ke kiri
+                } else { // Jika Warrior milik Player 2
+                    effectY -= 40;
+                    effectX += 5;
+                }
+            }
+
+            if (targetHero instanceof Tank) {
+                if (player1.getHeroRoster().contains(targetHero)) { // Jika Warrior milik Player 1
+                    effectY -= 30; // Contoh: geser efek sedikit ke atas
+                    effectX -= 5; // Contoh: geser efek sedikit ke kiri
+                } else { // Jika Warrior milik Player 2
+                    effectY -= 30;
+                    effectX += 5;
+                }
+            }
+            // Tambahkan hero lain di sini dengan 'else if'
+            /*
+            else if (targetHero instanceof Mage) {
+                effectY += 50; // Contoh: Efek untuk Mage muncul lebih tinggi
+            }
+            */
+            // =================================================================
+            // ---               AKHIR BLOK KUSTOMISASI                    ---
+            // =================================================================
+
+            // 2. Terapkan posisi final
+            effectActor.setPosition(effectX, effectY);
+
+            // 3. Tambahkan efek ke stage
+            stage.addActor(effectActor);
+        }
     }
 
     private void startScrollDraft() {
@@ -233,20 +340,28 @@ public class BattleScreen implements Screen {
         }
 
         currentState = BattleState.PROCESSING;
-        scrollWasUsedThisTurn = true;
-        actionWasTaken = true; // Menggunakan scroll dihitung sebagai aksi
+        boolean success = scroll.activate(currentPlayer, opponent, target, this);
 
-        // Panggil activate dengan target yang sudah ditentukan
-        scroll.activate(currentPlayer, opponent, target, this);
-        currentPlayer.removeScroll(scroll); // Scroll dihapus dari tangan player
+        if (success) {
+            // Aksi berhasil, scroll dikonsumsi dan giliran berakhir
+            scrollWasUsedThisTurn = true;
+            actionWasTaken = true;
+            currentPlayer.removeScroll(scroll);
 
-        // Setelah menggunakan scroll, giliran otomatis berakhir
-        Timer.schedule(new Timer.Task() {
-            @Override
-            public void run() {
-                endTurn();
-            }
-        }, 1.5f);
+            // Setelah menggunakan scroll, giliran otomatis berakhir
+            Timer.schedule(new Timer.Task() {
+                @Override
+                public void run() {
+                    endTurn();
+                }
+            }, 1.5f);
+        } else {
+            // Jika gagal (misal, target salah), kembalikan state agar pemain bisa memilih aksi lain
+            // Pesan error "fizzles out" sudah di-log dari dalam metode activate scroll
+            currentState = BattleState.AWAITING_INPUT;
+            onTargetSelected = null; // Batalkan pemilihan target
+            // Jangan set actionWasTaken atau scrollWasUsedThisTurn ke true
+        }
     }
 
 
@@ -261,7 +376,6 @@ public class BattleScreen implements Screen {
         allPossibleScrolls.add(new ScrollOfFireball());
         allPossibleScrolls.add(new ScrollOfPower());
         allPossibleScrolls.add(new ScrollOfShielding());
-        // Tambahkan 1 lagi agar pas 6
         allPossibleScrolls.add(new ScrollOfVulnerability()); // Asumsi ada ScrollOfVulnerability
     }
 
@@ -385,6 +499,8 @@ public class BattleScreen implements Screen {
         logLabel = new Label("", skin, "highlighted");
         logLabel.setWrap(true);
         logLabel.setAlignment(Align.center);
+        logLabel.setFontScale(1.4f); // <-- TAMBAHKAN BARIS INI untuk memperbesar teks
+        logLabel.setColor(Color.WHITE); // <-- TAMBAHKAN BARIS INI untuk mengubah warna jadi putih
         topCenterContainer.add(turnLabel).pad(10).row();
         topCenterContainer.add(logLabel).width(screenWidth * 0.4f).row();
         topUiStack.add(topCenterContainer);
@@ -719,7 +835,7 @@ public class BattleScreen implements Screen {
 
         if (currentPlayer == player1) {
             turnCount++;
-            if (turnCount > 1 && turnCount % 2 != 0) { // Award setiap awal giliran ganjil (setelah P2 selesai)
+            if (turnCount > 1 && turnCount % 4 != 0) { // Award setiap awal giliran ganjil (setelah P2 selesai)
                 awardScrolls();
             }
         }
@@ -851,6 +967,7 @@ public class BattleScreen implements Screen {
                     if (info.isCritical) {
                         text = "CRIT! " + text;
                         color = Color.YELLOW;
+                        if (crit != null) crit.play(0.2f);
                     }
                     FloatingText ft = new FloatingText(text, skin, color);
                     ft.setPosition(targetActor.getX() + targetActor.getWidth() / 2 - ft.getPrefWidth() / 2, targetActor.getY() + targetActor.getHeight());
@@ -882,6 +999,7 @@ public class BattleScreen implements Screen {
         stage.dispose();
         if (background != null) background.dispose();
         if (skin != null) skin.dispose();
+        if (crit != null) crit.dispose();
 
         if (statusEffectIcons != null) {
             for (Texture texture : statusEffectIcons.values()) {

@@ -1,5 +1,7 @@
 package com.ezra.supersmash.Heroes;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.ezra.supersmash.Hero;
@@ -10,8 +12,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Tank extends Hero {
+    private Sound axe;
     public Tank() {
         super("Tank", 160, new ShieldBash(), createTankAnimations());
+        axe = Gdx.audio.newSound(Gdx.files.internal("sounds/axe.mp3"));
     }
 
     private static AnimationComponent createTankAnimations() {
@@ -29,6 +33,7 @@ public class Tank extends Hero {
 
     @Override
     public void basicAttack(Hero target) {
+        axe.play(0.1f);
         System.out.println(name + " charges forward!");
         dealDamage(target, 10); // Gunakan metode publik yang diwariskan
     }

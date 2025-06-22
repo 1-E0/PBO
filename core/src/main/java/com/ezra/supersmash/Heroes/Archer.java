@@ -1,7 +1,10 @@
 package com.ezra.supersmash.Heroes;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.utils.Timer;
 import com.ezra.supersmash.Hero;
 import com.ezra.supersmash.Rendering.AnimationComponent;
 import com.ezra.supersmash.Skills.MultiShot;
@@ -10,8 +13,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Archer extends Hero {
+    private Sound arrow;
     public Archer() {
         super("Archer", 90, new MultiShot(), createArcherAnimations());
+        arrow = Gdx.audio.newSound(Gdx.files.internal("sounds/arrow.mp3"));
     }
 
     private static AnimationComponent createArcherAnimations() {
@@ -26,6 +31,12 @@ public class Archer extends Hero {
 
     @Override
     public void basicAttack(Hero target) {
+        Timer.schedule(new Timer.Task(){
+            @Override
+            public void run() {
+                arrow.play(0.1f);
+            }
+        }, 0.8f);
         System.out.println(name + " shoots an arrow!");
         dealDamage(target, 18); // Gunakan metode publik yang diwariskan
     }

@@ -1,5 +1,7 @@
 package com.ezra.supersmash.Heroes;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.ezra.supersmash.Hero;
@@ -10,8 +12,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Mage extends Hero {
+    private Sound fireball;
     public Mage() {
         super("Mage", 80, new Fireball(), createMageAnimations());
+        fireball = Gdx.audio.newSound(Gdx.files.internal("sounds/fireball.mp3"));
     }
 
     private static AnimationComponent createMageAnimations() {
@@ -29,6 +33,7 @@ public class Mage extends Hero {
 
     @Override
     public void basicAttack(Hero target) {
+        fireball.play(0.1f);
         System.out.println(name + " attacks with magic missile!");
         dealDamage(target, 15); // Gunakan metode publik yang diwariskan
     }
