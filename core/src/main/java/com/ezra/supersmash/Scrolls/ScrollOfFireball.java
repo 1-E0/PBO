@@ -19,23 +19,24 @@ public class ScrollOfFireball extends Scroll {
     }
 
     @Override
-    public void activate(Player user, Player opponent, Hero target, BattleScreen screen) {
-        // Logika acak tidak lagi diperlukan
-        if (target != null && target.isAlive() && opponent.getHeroRoster().contains(target)) {
+    public boolean activate(Player user, Player opponent, Hero target, BattleScreen screen) {
+        if (target != null && target.isAlive() && opponent.getHeroRoster().contains(target)) { //
             scrollFire.play(0.1f);
             int damage = 40;
-            target.takeDamage(damage); // Langsung memberikan damage tanpa critical
-            screen.log(getName() + " hits " + target.getName() + " for " + damage + " damage!");
+            target.takeDamage(damage); //
+            screen.log(getName() + " hits " + target.getName() + " for " + damage + " damage!"); //
             screen.playEffectAnimation(
-                target,                     // Hero target
-                "effects/fireball.png",         // Path ke spritesheet Anda
-                4,                         // Jumlah frame per baris (horizontal)
-                1,                         // Jumlah total baris animasi di gambar
-                0,                          // Indeks baris yang mau dipakai (0-9), 3 untuk baris hijau
-                0.08f                       // Durasi per frame (detik)
+                target,
+                "effects/fireball.png", //
+                4,
+                1,
+                0,
+                0.08f
             );
+            return true; // UBAH: Kembalikan true jika berhasil
         } else {
-            screen.log(getName() + " fizzles out. No valid target was selected.");
+            screen.log(getName() + " fizzles out. No valid target was selected."); //
+            return false; // UBAH: Kembalikan false jika gagal
         }
     }
 }

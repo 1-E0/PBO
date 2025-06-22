@@ -16,24 +16,24 @@ public class ScrollOfHealing extends Scroll {
         scrollHeal = Gdx.audio.newSound(Gdx.files.internal("sounds/scrollheal.mp3"));
     }
 
-    @Override
-    public void activate(Player user, Player opponent, Hero target, BattleScreen screen) {
-        // Gunakan target yang dipilih, pastikan target adalah milik pengguna scroll
-        if (target != null && target.isAlive() && user.getHeroRoster().contains(target)) {
+    public boolean activate(Player user, Player opponent, Hero target, BattleScreen screen) {
+        if (target != null && target.isAlive() && user.getHeroRoster().contains(target)) { //
             scrollHeal.play(0.1f);
             int healAmount = 30;
-            target.gainHealth(healAmount);
-            screen.log("Used " + getName() + " on " + target.getName() + ", restoring " + healAmount + " HP!");
+            target.gainHealth(healAmount); //
+            screen.log("Used " + getName() + " on " + target.getName() + ", restoring " + healAmount + " HP!"); //
             screen.playEffectAnimation(
-                target,                     // Hero target
-                "effects/heal.png",         // Path ke spritesheet Anda
-                5,                         // Jumlah frame per baris (horizontal)
-                1,                         // Jumlah total baris animasi di gambar
-                0,                          // Indeks baris yang mau dipakai (0-9), 3 untuk baris hijau
-                0.08f                       // Durasi per frame (detik)
+                target,
+                "effects/heal.png", //
+                5,
+                1,
+                0,
+                0.08f
             );
+            return true; // UBAH: Kembalikan true jika berhasil
         } else {
-            screen.log(getName() + " fizzles out. No valid target was selected.");
+            screen.log(getName() + " fizzles out. No valid target was selected."); //
+            return false; // UBAH: Kembalikan false jika gagal
         }
     }
 }

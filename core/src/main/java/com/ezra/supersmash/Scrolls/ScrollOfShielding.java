@@ -20,25 +20,26 @@ public class ScrollOfShielding extends Scroll {
         scrollShield= Gdx.audio.newSound(Gdx.files.internal("sounds/scrollshield.mp3"));
     }
 
+
     @Override
-    // Metode activate sekarang menerima Hero target
-    public void activate(Player user, Player opponent, Hero target, BattleScreen screen) {
-        // Logika pemilihan acak dihapus.
-        // Pastikan target valid (milik sendiri dan masih hidup).
-        if (target != null && target.isAlive() && user.getHeroRoster().contains(target)) {
+    // UBAH: Mengembalikan boolean
+    public boolean activate(Player user, Player opponent, Hero target, BattleScreen screen) {
+        if (target != null && target.isAlive() && user.getHeroRoster().contains(target)) { //
             scrollShield.play(0.1f);
-            target.addStatusEffect(new DefenseUpEffect(2, 0.5f)); // Durasi 2 agar aktif 1 giliran penuh
-            screen.log(target.getName() + " is shielded by " + getName() + "!");
+            target.addStatusEffect(new DefenseUpEffect(2, 0.5f)); //
+            screen.log(target.getName() + " is shielded by " + getName() + "!"); //
             screen.playEffectAnimation(
-                target,                     // Hero target
-                "effects/shield.png",         // Path ke spritesheet Anda
-                2,                         // Jumlah frame per baris (horizontal)
-                1,                         // Jumlah total baris animasi di gambar
-                0,                          // Indeks baris yang mau dipakai (0-9), 3 untuk baris hijau
-                0.12f                       // Durasi per frame (detik)
+                target,
+                "effects/shield.png", //
+                2,
+                1,
+                0,
+                0.12f
             );
+            return true; // UBAH: Kembalikan true jika berhasil
         } else {
-            screen.log(getName() + " failed. No valid target was selected.");
+            screen.log(getName() + " failed. No valid target was selected."); //
+            return false; // UBAH: Kembalikan false jika gagal
         }
     }
 }

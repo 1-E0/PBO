@@ -2,6 +2,7 @@ package com.ezra.supersmash;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
@@ -42,6 +43,7 @@ public class BattleScreen implements Screen {
     private Texture background;
     private Player player1, player2, currentPlayer, opponent;
     private Sound crit;
+    private Music battleMusic; // Variabel untuk musik pertempuran
 
     // UI Battle
     private Label turnLabel, logLabel, turnCounterLabel;
@@ -81,6 +83,11 @@ public class BattleScreen implements Screen {
         skin = new Skin(Gdx.files.internal("ui/uiskin.json"));
         background = new Texture(Gdx.files.internal(new String[]{"backgrounds/game_background_1.png", "backgrounds/game_background_2.png", "backgrounds/game_background_3.png", "backgrounds/game_background_4.png"}[new Random().nextInt(4)]));
         crit = Gdx.audio.newSound(Gdx.files.internal("sounds/crit.mp3"));
+
+        // Memuat dan mengatur musik pertempuran
+        battleMusic = Gdx.audio.newMusic(Gdx.files.internal("sounds/battlesong.mp3"));
+        battleMusic.setLooping(true);
+        battleMusic.setVolume(0.08f);
 
         progressBarStyle = skin.get("default-horizontal", ProgressBar.ProgressBarStyle.class);
         statusEffectIcons = new HashMap<>();
@@ -979,7 +986,12 @@ public class BattleScreen implements Screen {
         }
     }
 
-    @Override public void show() {}
+    @Override
+    public void show() {
+        if (battleMusic != null) {
+            battleMusic.play();
+        }
+    }
 
     @Override
     public void resize(int width, int height) {
@@ -993,13 +1005,19 @@ public class BattleScreen implements Screen {
 
     @Override public void pause() {}
     @Override public void resume() {}
-    @Override public void hide() {}
+    @Override
+    public void hide() {
+        if (battleMusic != null) {
+            battleMusic.stop();
+        }
+    }
 
     @Override public void dispose() {
         stage.dispose();
         if (background != null) background.dispose();
         if (skin != null) skin.dispose();
         if (crit != null) crit.dispose();
+        if (battleMusic != null) battleMusic.dispose(); // Membersihkan musik
 
         if (statusEffectIcons != null) {
             for (Texture texture : statusEffectIcons.values()) {
@@ -1022,4 +1040,3 @@ public class BattleScreen implements Screen {
         }
     }
 }
-

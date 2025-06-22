@@ -20,23 +20,23 @@ public class ScrollOfPower extends Scroll {
 
     @Override
     // Metode activate sekarang menerima Hero target
-    public void activate(Player user, Player opponent, Hero target, BattleScreen screen) {
-        // Logika pemilihan acak dihapus.
-        // Pastikan target valid (milik sendiri dan masih hidup).
-        if (target != null && target.isAlive() && user.getHeroRoster().contains(target)) {
+    public boolean activate(Player user, Player opponent, Hero target, BattleScreen screen) {
+        if (target != null && target.isAlive() && user.getHeroRoster().contains(target)) { //
             scrollPower.play(0.1f);
-            target.addStatusEffect(new AttackUpEffect(3, 0.3f)); // Durasi 3 agar aktif 2 giliran penuh
-            screen.log(target.getName() + "'s attack is boosted by " + getName() + "!");
+            target.addStatusEffect(new AttackUpEffect(3, 0.3f)); //
+            screen.log(target.getName() + "'s attack is boosted by " + getName() + "!"); //
             screen.playEffectAnimation(
-                target,                     // Hero target
-                "effects/power.png",         // Path ke spritesheet Anda
-                2,                         // Jumlah frame per baris (horizontal)
-                1,                         // Jumlah total baris animasi di gambar
-                0,                          // Indeks baris yang mau dipakai (0-9), 3 untuk baris hijau
-                0.12f                       // Durasi per frame (detik)
+                target,
+                "effects/power.png", //
+                2,
+                1,
+                0,
+                0.12f
             );
+            return true; // UBAH: Kembalikan true jika berhasil
         } else {
-            screen.log(getName() + " failed. No valid target was selected.");
+            screen.log(getName() + " failed. No valid target was selected."); //
+            return false; // UBAH: Kembalikan false jika gagal
         }
     }
 }

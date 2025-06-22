@@ -22,7 +22,7 @@ public class ScrollOfStunning extends Scroll {
 
     @Override
     // Metode activate sekarang menerima Hero target
-    public void activate(Player user, Player opponent, Hero target, BattleScreen screen) {
+    public boolean activate(Player user, Player opponent, Hero target, BattleScreen screen) {
         // Logika pemilihan acak dihapus.
         // Sekarang kita langsung menggunakan target yang dipilih.
         // Pastikan target valid (milik lawan dan masih hidup).
@@ -37,9 +37,10 @@ public class ScrollOfStunning extends Scroll {
                 1,                         // Jumlah total baris animasi di gambar
                 0,                          // Indeks baris yang mau dipakai (0-9), 3 untuk baris hijau
                 0.12f                       // Durasi per frame (detik)
-            );
+            ); return true; // UBAH: Kembalikan true jika berhasil
         } else {
-            screen.log(getName() + " failed. No valid target was selected.");
+            screen.log(getName() + " fizzles out. No valid target was selected."); //
+            return false; // UBAH: Kembalikan false jika gagal
         }
     }
 }
