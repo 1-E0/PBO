@@ -231,9 +231,16 @@ public class BattleScreen implements Screen {
         root.add(turnLabel).pad(20).top().row();
 
         draftScrollContainer = new Table();
+        // --- PERBAIKAN SCALING ---
+        // Hitung ukuran scroll secara dinamis berdasarkan tinggi layar
+        float screenHeight = Gdx.graphics.getHeight();
+        float scrollHeight = screenHeight * 0.35f; // Ukuran scroll dibuat 25% dari tinggi layar
+        float scrollWidth = scrollHeight * (240f / 330f); // Menjaga aspek rasio asli (dari konstruktor ScrollActor)
+
         for (Scroll scroll : draftableScrolls) {
             ScrollActor actor = new ScrollActor(scroll, this, true);
-            draftScrollContainer.add(actor).pad(15);
+            // Terapkan ukuran dinamis ke dalam cell tabel
+            draftScrollContainer.add(actor).size(scrollWidth, scrollHeight).pad(15);
         }
         root.add(draftScrollContainer).expand().row();
 
@@ -881,7 +888,6 @@ public class BattleScreen implements Screen {
 
         for (Scroll scroll : player1.getScrolls()) {
             ScrollActor actor = new ScrollActor(scroll, this, false);
-            actor.setSize(160, 220);
             actor.setSize(scrollWidth, scrollHeight);
             p1ScrollContainer.add(actor).padBottom(10);
             p1ScrollContainer.row();
@@ -889,7 +895,6 @@ public class BattleScreen implements Screen {
 
         for (Scroll scroll : player2.getScrolls()) {
             ScrollActor actor = new ScrollActor(scroll, this, false);
-            actor.setSize(160, 220);
             actor.setSize(scrollWidth, scrollHeight);
             p2ScrollContainer.add(actor).padBottom(10);
             p2ScrollContainer.row();
