@@ -441,8 +441,10 @@ public class BattleScreen implements Screen {
         Drawable statusBoxBg = skin.newDrawable("rect", new Color(0.2f, 0.2f, 0.2f, 0.5f));
         float statusBoxWidth = 190f;
         float statusBoxHeight = 110f;
-        float horizontalOffsetP1Status = 160f;
-        float horizontalOffsetP2Status = 180f;
+        // --- PERUBAHAN ---
+        // Nilai offset horizontal ditambah untuk menggeser status box lebih jauh ke belakang.
+        float horizontalOffsetP1Status = 180f; // Sebelumnya: 160f
+        float horizontalOffsetP2Status = 200f; // Sebelumnya: 180f
 
         for (int i = 0; i < 3; i++) {
             float charHeightP1 = baseCharHeight * scales[i];
@@ -454,6 +456,7 @@ public class BattleScreen implements Screen {
             p1StatusTables[i] = new Table();
             p1StatusTables[i].setBackground(statusBoxBg);
             p1StatusTables[i].setSize(statusBoxWidth, statusBoxHeight);
+            // Kalkulasi posisi X sekarang akan menggunakan offset yang baru
             float p1BoxX = p1HeroActors[i].getX() + (p1CharWidth / 2) - (p1StatusTables[i].getWidth() / 2) - horizontalOffsetP1Status;
             float p1BoxY = p1HeroActors[i].getY() - 20f;
             if (i > 0) {
@@ -465,6 +468,7 @@ public class BattleScreen implements Screen {
             stage.addActor(p1StatusTables[i]);
             stage.addActor(p1HeroActors[i]);
             addHeroClickListener(p1HeroActors[i]);
+
             float charHeightP2 = baseCharHeight * scales[i];
             Hero p2Hero = player2.getHeroRoster().get(i);
             p2HeroActors[i] = new HeroActor(p2Hero, true);
@@ -474,6 +478,7 @@ public class BattleScreen implements Screen {
             p2StatusTables[i] = new Table();
             p2StatusTables[i].setBackground(statusBoxBg);
             p2StatusTables[i].setSize(statusBoxWidth, statusBoxHeight);
+            // Kalkulasi posisi X sekarang akan menggunakan offset yang baru
             float p2BoxX = p2HeroActors[i].getX() + (p2CharWidth / 2) - (p2StatusTables[i].getWidth() / 2) + horizontalOffsetP2Status;
             float p2BoxY = p2HeroActors[i].getY() - 20f;
             if (i > 0) {
