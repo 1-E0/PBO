@@ -30,6 +30,17 @@ public class Archer extends Hero {
     }
 
     @Override
+    public void useSkill(Hero target) {
+        Timer.schedule(new Timer.Task(){
+            @Override
+            public void run() {
+                arrow.play(0.1f);
+            }
+        }, 0.8f);
+        super.useSkill(target);
+    }
+
+    @Override
     public void basicAttack(Hero target) {
         Timer.schedule(new Timer.Task(){
             @Override

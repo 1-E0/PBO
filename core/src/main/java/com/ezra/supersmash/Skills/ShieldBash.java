@@ -14,6 +14,8 @@ public class ShieldBash implements Skill {
         // UBAH DURASI MENJADI 2 AGAR EFEK BERTAHAN SATU GILIRAN LAWAN
         self.addStatusEffect(new DefenseUpEffect(2, 0.5f));
         self.addStatusEffect(new MockEffect(2)); // <-- PERUBAHAN
-        target.addStatusEffect(new AttackDownEffect(1, 0.3f));
+        // --- PERBAIKAN BUG ---
+        // Durasi diubah dari 1 menjadi 2 agar efek bertahan selama 1 giliran lawan.
+        target.addStatusEffect(new AttackDownEffect(2, 0.3f));
     }
 }

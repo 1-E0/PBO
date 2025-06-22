@@ -32,6 +32,12 @@ public class Assassin extends Hero {
     }
 
     @Override
+    public void useSkill(Hero target) {
+        dag.play(0.1f);
+        super.useSkill(target);
+    }
+
+    @Override
     public void basicAttack(Hero target) {
         dag.play(0.1f);
         System.out.println(name + " slashes swiftly!");

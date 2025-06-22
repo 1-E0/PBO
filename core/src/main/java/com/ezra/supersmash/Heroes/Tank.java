@@ -32,6 +32,12 @@ public class Tank extends Hero {
     }
 
     @Override
+    public void useSkill(Hero target) {
+        axe.play(0.1f);
+        super.useSkill(target);
+    }
+
+    @Override
     public void basicAttack(Hero target) {
         axe.play(0.1f);
         System.out.println(name + " charges forward!");

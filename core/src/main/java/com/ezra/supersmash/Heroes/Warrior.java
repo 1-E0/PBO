@@ -32,6 +32,12 @@ public class Warrior extends Hero {
     }
 
     @Override
+    public void useSkill(Hero target) {
+        swing.play(0.5f);
+        super.useSkill(target);
+    }
+
+    @Override
     public void basicAttack(Hero target) {
         swing.play(0.5f);
         System.out.println(name + " attacks with sword!");
