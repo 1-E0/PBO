@@ -21,7 +21,7 @@ public class Archer extends Hero {
 
     private static AnimationComponent createArcherAnimations() {
         Map<AnimationComponent.HeroState, Animation<TextureRegion>> animations = new HashMap<>();
-        // Paths are now pointing to the "characters" folder
+
         animations.put(AnimationComponent.HeroState.IDLE, AnimationComponent.createAnimation("characters/archer_idle.png", 9, 0.1f));
         animations.put(AnimationComponent.HeroState.ATTACKING, AnimationComponent.createAnimation("characters/archer_attack.png", 14, 0.08f));
         animations.put(AnimationComponent.HeroState.HURT, AnimationComponent.createAnimation("characters/archer_hurt.png", 3, 0.1f));

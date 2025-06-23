@@ -15,9 +15,7 @@ public abstract class Scroll {
         this.texture = new Texture(texturePath); // Gambar
     }
 
-    // Metode ini akan dipanggil saat scroll digunakan
-    // 'user' adalah pemain yang menggunakan scroll, 'screen' adalah instance BattleScreen
-    // 'target' adalah hero spesifik yang menjadi sasaran scroll
+
     public abstract boolean activate(Player user, Player opponent, Hero target, BattleScreen screen);
 
     public String getName() {

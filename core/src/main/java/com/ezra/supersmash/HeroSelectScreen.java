@@ -38,7 +38,6 @@ public class HeroSelectScreen implements Screen {
     private Label tooltipLabel;
     private final HeroInfo[] heroInfoData;
 
-    // UBAH BARU: Tambahkan Music, Generator, dan Font
     private Music music;
     private FreeTypeFontGenerator fontGenerator;
     private BitmapFont customFont;
@@ -50,21 +49,17 @@ public class HeroSelectScreen implements Screen {
     private static final int HEROES_TO_PICK = 3;
     private final Hero[] availableHeroes = {new Warrior(), new Archer(), new Mage(), new Assassin(), new Tank()};
 
+    // Offset manual untuk memposisikan sprite hero agar terlihat pas di dalam container.
     private final float[] heroManualOffsetsX = { 15f, 0f, 10f, 5f, 10f };
 
 
     public HeroSelectScreen(Main game) {
         this.game = game;
         heroInfoData = new HeroInfo[]{
-            // Warrior
             new HeroInfo("HP: 120\nDMG: 20", "Hammer Swing:\nMenyerang musuh dan memiliki 50% kemungkinan untuk menyebabkan Stun selama 1 giliran."),
-            // Archer
             new HeroInfo("HP: 90\nDMG: 18", "Multi Shot:\nMenembak musuh, memberikan damage dan efek Bleed (damage dari waktu ke waktu)."),
-            // Mage
             new HeroInfo("HP: 80\nDMG: 15", "Fireball:\nMenembakkan bola api yang memberikan damage dan efek Burn (damage dari waktu ke waktu)."),
-            // Assassin
             new HeroInfo("HP: 70\nDMG: 25", "Shadow Strike:\nSerangan kuat yang mengabaikan defense dan membuat target rentan, menerima 50% damage tambahan dari serangan berikutnya."),
-            // Tank
             new HeroInfo("HP: 160\nDMG: 10", "Shield Bash:\nSerangan lemah yang memprovokasi (Mock) musuh, sekaligus meningkatkan pertahanan diri sendiri dan menurunkan serangan target.")
         };
 
@@ -75,7 +70,6 @@ public class HeroSelectScreen implements Screen {
         hover = Gdx.audio.newSound(Gdx.files.internal("sounds/hoverbutton.mp3"));
         click = Gdx.audio.newSound(Gdx.files.internal("sounds/hover.mp3"));
 
-        // UBAH BARU: Muat musik dari Main Menu
         music = Gdx.audio.newMusic(Gdx.files.internal("sounds/Mainmenu.mp3"));
         music.setLooping(true);
         music.setVolume(0.1f);
@@ -84,7 +78,6 @@ public class HeroSelectScreen implements Screen {
     }
 
     private void setupUI() {
-        // UBAH BARU: Generate font kustom dari file .ttf
         fontGenerator = new FreeTypeFontGenerator(Gdx.files.internal("ui/Silver.ttf"));
         FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
         parameter.size = 28;
@@ -93,7 +86,6 @@ public class HeroSelectScreen implements Screen {
         parameter.borderColor = new Color(0.2f, 0.2f, 0.2f, 1f);
         customFont = fontGenerator.generateFont(parameter);
 
-        // Buat style baru untuk digunakan oleh elemen UI
         Label.LabelStyle labelStyle = new Label.LabelStyle(customFont, Color.WHITE);
         TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle(
             skin.getDrawable("button-normal"),
@@ -101,7 +93,6 @@ public class HeroSelectScreen implements Screen {
             null,
             customFont);
 
-        // Tambahkan style baru ke skin dengan nama yang unik
         skin.add("customLabelStyle", labelStyle);
         skin.add("customButtonStyle", buttonStyle);
 
@@ -129,7 +120,6 @@ public class HeroSelectScreen implements Screen {
             TextureRegion heroSprite = hero.animationComponent.getFrame();
             Image heroImage = new Image(heroSprite);
 
-            // Gunakan style font yang baru dibuat
             Label heroNameLabel = new Label(hero.getName(), skin, "customLabelStyle");
             heroNameLabel.setAlignment(Align.center);
             heroNameLabels.add(heroNameLabel);
@@ -147,18 +137,15 @@ public class HeroSelectScreen implements Screen {
                 @Override public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
                     if (pointer == -1) {
                         hover.play(0.1f);
-
-                        // --- Logika untuk menampilkan tooltip ---
+                        // Tampilkan tooltip dengan info hero saat di-hover
                         HeroInfo info = heroInfoData[heroIndex];
                         String tooltipText = info.stats + "\n\nSkill: " + info.skillDesc;
                         tooltipLabel.setText(tooltipText);
-                        tooltipTable.pack(); // Atur ukuran table agar pas dengan teks
+                        tooltipTable.pack();
 
-                        // Posisikan tooltip di dekat kursor
                         float tooltipX = event.getStageX() + 15f;
                         float tooltipY = event.getStageY() - 15f - tooltipTable.getHeight();
 
-                        // Cek agar tidak keluar layar
                         if (tooltipX + tooltipTable.getWidth() > stage.getWidth()) {
                             tooltipX = event.getStageX() - 15f - tooltipTable.getWidth();
                         }
@@ -173,14 +160,13 @@ public class HeroSelectScreen implements Screen {
                 @Override
                 public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
                     if (pointer == -1) {
-                        tooltipTable.setVisible(false); // Sembunyikan tooltip
+                        tooltipTable.setVisible(false);
                     }
                 }
             });
             heroTable.add(heroButton).width(180).height(200).pad(15);
         }
 
-        // Gunakan style font yang baru dibuat
         confirmButton = new TextButton("Confirm", skin, "customButtonStyle");
         confirmButton.setDisabled(true);
         confirmButton.addListener(new ClickListener() {
@@ -188,7 +174,6 @@ public class HeroSelectScreen implements Screen {
             @Override public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) { if (pointer == -1 && !confirmButton.isDisabled()) { hover.play(0.1f); } }
         });
 
-        // Gunakan style font yang baru dibuat
         TextButton backButton = new TextButton("Back", skin, "customButtonStyle");
         backButton.addListener(new ClickListener() {
             @Override public void clicked(InputEvent event, float x, float y) {
@@ -207,15 +192,15 @@ public class HeroSelectScreen implements Screen {
         backButtonContainer.add(backButton).width(150).height(60).pad(25f);
 
         tooltipTable = new Table(skin);
-        tooltipTable.setBackground(skin.newDrawable("list", new Color(0.1f, 0.1f, 0.1f, 0.9f))); // Latar belakang semi-transparan
+        tooltipTable.setBackground(skin.newDrawable("list", new Color(0.1f, 0.1f, 0.1f, 0.9f)));
         tooltipTable.pad(10f);
-        tooltipTable.setVisible(false); // Sembunyikan secara default
+        tooltipTable.setVisible(false);
 
         tooltipLabel = new Label("", skin, "default");
         tooltipLabel.setWrap(true);
         tooltipLabel.setAlignment(Align.left);
 
-        tooltipTable.add(tooltipLabel).width(220f); // Atur lebar agar teks bisa wrap
+        tooltipTable.add(tooltipLabel).width(220f);
         stage.addActor(tooltipTable);
 
         updateTitle();
@@ -233,17 +218,13 @@ public class HeroSelectScreen implements Screen {
             }
         }
 
-        // --- BLOK PERBAIKAN ---
-        // Logika untuk mengubah warna highlight
+        // Ubah warna nama hero yang dipilih untuk memberikan feedback visual
         for(int i = 0; i < heroNameLabels.size(); i++) {
             Label label = heroNameLabels.get(i);
-
-            // SEBELUMNYA (SALAH): label.getStyle().fontColor = Color.YELLOW;
-            // SESUDAH (BENAR): Gunakan setColor() pada instance label
             if (currentPicks.contains(i)) {
-                label.setColor(Color.YELLOW); // Mengubah warna label spesifik ini menjadi kuning
+                label.setColor(Color.YELLOW);
             } else {
-                label.setColor(Color.WHITE); // Mengembalikan warna label spesifik ini ke putih
+                label.setColor(Color.WHITE);
             }
         }
         confirmButton.setDisabled(currentPicks.size() != HEROES_TO_PICK);
@@ -252,13 +233,11 @@ public class HeroSelectScreen implements Screen {
 
     @Override
     public void show() {
-        // UBAH BARU: Mainkan musik saat layar ditampilkan
         music.play();
     }
 
     @Override
     public void hide() {
-        // UBAH BARU: Hentikan musik saat layar disembunyikan
         music.stop();
     }
 
@@ -270,7 +249,6 @@ public class HeroSelectScreen implements Screen {
         click.dispose();
         hover.dispose();
 
-        // UBAH BARU: Pastikan semua resource yang dibuat manual di-dispose
         music.dispose();
         if (fontGenerator != null) fontGenerator.dispose();
         if (customFont != null) customFont.dispose();
@@ -293,8 +271,6 @@ public class HeroSelectScreen implements Screen {
             for(Label label : heroNameLabels) {
                 label.setColor(Color.WHITE);
             }
-            // --- AKHIR BLOK PERBAIKAN ---
-
             updateTitle();
         } else {
             startGame();
