@@ -12,7 +12,7 @@ public abstract class Scroll {
     public Scroll(String name, String description, String texturePath) {
         this.name = name;
         this.description = description;
-        this.texture = new Texture(texturePath); // Memuat gambar untuk scroll
+        this.texture = new Texture(texturePath); // Gambar
     }
 
     // Metode ini akan dipanggil saat scroll digunakan

@@ -8,8 +8,8 @@ public class ShadowStrike implements Skill {
     @Override
     public void activate(Hero self, Hero target) {
         System.out.println(self.getName() + " uses Shadow Strike! Ignores defense.");
-        self.dealDamage(target, 40); // Panggil metode publik baru
-        // Menerapkan efek Vulnerable tanpa durasi, akan hilang setelah diserang.
+        self.dealDamage(target, 40);
+
         target.addStatusEffect(new VulnerableEffect(1.5f));
     }
 }

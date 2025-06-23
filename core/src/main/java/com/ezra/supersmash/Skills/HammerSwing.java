@@ -8,7 +8,7 @@ public class HammerSwing implements Skill {
     @Override
     public void activate(Hero self, Hero target) {
         System.out.println(self.getName() + " uses Hammer Swing!");
-        self.dealDamage(target, 20); // Panggil metode publik baru
+        self.dealDamage(target, 20);
         if (Math.random() < 0.5) {
             target.addStatusEffect(new StunEffect(2));
         }

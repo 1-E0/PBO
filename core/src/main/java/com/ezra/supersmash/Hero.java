@@ -10,11 +10,11 @@ import java.util.Iterator;
 import java.util.List;
 
 public abstract class Hero {
-    // --- DATA UNTUK CRITICAL HIT ---
-    private static final float CRIT_CHANCE = 0.20f; // Peluang 20%
-    private static final float CRIT_MULTIPLIER = 2.0f; // Damage 2x lipat
 
-    // --- ANTRIAN UNTUK FLOATING TEXT ---
+    private static final float CRIT_CHANCE = 0.20f;
+    private static final float CRIT_MULTIPLIER = 2.0f;
+
+
     public static class DamageInfo {
         public Hero target;
         public int amount;
@@ -48,22 +48,22 @@ public abstract class Hero {
 
     public void gainHealth(int amount) {
         this.currentHp = Math.min(this.currentHp + amount, this.maxHp);
-        // Mungkin tambahkan juga floating text untuk healing
+
     }
 
     protected int calculateDamage(int baseDamage, boolean isCritical) {
         float finalDamage = baseDamage;
 
-        // Terapkan modifikasi dari status
+
         for (StatusEffect effect : this.activeEffects) {
             if (effect instanceof AttackDownEffect) {
                 finalDamage *= (1.0f - ((AttackDownEffect) effect).attackReduction);
             }
-            // --- TAMBAHAN ---
+
             if (effect instanceof AttackUpEffect) {
                 finalDamage *= (1.0f + ((AttackUpEffect) effect).attackBonus);
             }
-            // --- AKHIR TAMBAHAN ---
+
         }
 
         // Terapkan damage critical
@@ -100,7 +100,7 @@ public abstract class Hero {
         return false;
     }
 
-    // Overload untuk damage biasa (seperti dari Burn/Bleed) yang tidak bisa kritikal
+    // Overload ,damage status yg gk bisa crit
     public void takeDamage(int damage) {
         takeDamage(damage, false);
     }

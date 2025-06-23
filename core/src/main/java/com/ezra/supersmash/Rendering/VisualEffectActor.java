@@ -6,17 +6,14 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 
-/**
- * Aktor ini bertanggung jawab untuk memutar animasi efek visual sekali,
- * lalu menghapus dirinya sendiri dari stage.
- */
+
 public class VisualEffectActor extends Actor {
     private Animation<TextureRegion> animation;
     private float stateTime = 0f;
 
     public VisualEffectActor(Animation<TextureRegion> animation) {
         this.animation = animation;
-        // Atur ukuran default Actor berdasarkan ukuran frame animasi
+
         TextureRegion frame = animation.getKeyFrame(0);
         setSize(frame.getRegionWidth(), frame.getRegionHeight());
     }
@@ -25,7 +22,7 @@ public class VisualEffectActor extends Actor {
     public void act(float delta) {
         super.act(delta);
         stateTime += delta;
-        // Hapus Actor ini dari Stage jika animasi sudah selesai
+
         if (animation.isAnimationFinished(stateTime)) {
             this.remove();
         }
@@ -39,7 +36,7 @@ public class VisualEffectActor extends Actor {
     }
 
     /**
-     * Metode helper untuk membuat animasi dari sebuah spritesheet.
+
      * @param texturePath Path ke file gambar (spritesheet).
      * @param frameCols Jumlah kolom (frame horizontal) dalam spritesheet.
      * @param frameRows Jumlah baris (frame vertikal) dalam spritesheet.

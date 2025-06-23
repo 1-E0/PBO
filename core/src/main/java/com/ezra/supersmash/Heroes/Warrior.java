@@ -39,8 +39,8 @@ public class Warrior extends Hero {
 
     @Override
     public void basicAttack(Hero target) {
-        swing.play(0.5f);
+        swing.play(0.2f);
         System.out.println(name + " attacks with sword!");
-        dealDamage(target, 20); // Gunakan metode publik yang diwariskan
+        dealDamage(target, 20);
     }
 }
